@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .bg-grid-white {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54 48 L60 48 L60 54 L54 54 L54 48 Z M42 48 L48 48 L48 54 L42 54 L42 48 Z M30 48 L36 48 L36 54 L30 54 L30 48 Z M18 48 L24 48 L24 54 L18 54 L18 48 Z M6 48 L12 48 L12 54 L6 54 L6 48 Z M0 36 L6 36 L6 42 L0 42 L0 36 Z M0 24 L6 24 L6 30 L0 30 L0 24 Z M0 12 L6 12 L6 18 L0 18 L0 12 Z M0 0 L6 0 L6 6 L0 6 L0 0 Z' fill='currentColor' fill-opacity='0.1'/%3E%3C/svg%3E");
+  }
+}

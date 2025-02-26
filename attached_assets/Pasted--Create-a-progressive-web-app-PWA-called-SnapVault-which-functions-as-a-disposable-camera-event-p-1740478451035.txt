@@ -1,0 +1,20 @@
+"Create a progressive web app (PWA) called SnapVault, which functions as a disposable camera event platform for capturing, sharing, and revealing memories with a nostalgic touch. The app should be built using React (Next.js preferred) for a fast, seamless experience and must integrate Firebase backend (Firestore, Storage, Authentication) for real-time photo handling and secure storage.
+
+🔹 Key Features:
+Event-based Photo Capture: Users can create/join events where they can take photos through a disposable camera interface.
+QR Code Access: Each event generates a unique QR code that guests can scan to access the event’s camera without requiring any installation.
+Photo Limit Per User: Event organizers can set a max photo limit per guest (e.g., 5 photos per user).
+Delayed Reveal Mechanism: Implement a time-based photo reveal system where event photos remain hidden for a set duration (e.g., 24 hours, 48 hours, or custom time). Guests can only see them when the timer expires.
+Vintage & Film Filters: Add retro filters (grainy, black & white, sepia, light leaks) for an authentic disposable camera feel.
+Cloud Storage & Security: Store captured images securely using Firebase Storage, ensuring only authorized users can access them.
+Social Sharing & Download: Once photos are revealed, guests can download or share them directly from the gallery.
+Offline Support & PWA: The app should be a PWA that works offline-first, caching essential assets and allowing offline photo-taking (syncing when online).
+Minimal, Aesthetic UI/UX: The design should be modern, sleek, and intuitive with a dark/light theme toggle and smooth animations (Framer Motion preferred).
+🔸 Tech Stack & Requirements:
+Frontend: React (Next.js for SSR), Tailwind CSS, Framer Motion for smooth animations.
+Backend & Storage: Firebase Firestore, Firebase Storage, Firebase Auth (Google Sign-in).
+QR Code Integration: react-qr-code or qrcode.react for generating sharable QR codes.
+Camera Access: react-webcam for handling the camera API in browsers.
+PWA Support: Full PWA support with service workers for caching & offline mode.
+The UI should be similar in experience to Disposable.app but with unique branding and enhancements. The app should provide an event dashboard for organizers, allowing them to manage photos, access QR codes, and customize settings. Guests should have a seamless experience, accessing the camera via QR without logging in. The design must be responsive and optimized for mobile-first usage. Deploy it using Vercel for hosting and ensure Firebase security rules are properly configured to protect event data."
+
