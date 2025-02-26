@@ -7,7 +7,7 @@ export const events = pgTable("events", {
   name: text("name").notNull(),
   description: text("description"),
   photoLimit: integer("photo_limit").notNull().default(3),
-  revealDelay: integer("reveal_delay").notNull().default(5), // Hours
+  revealDelay: integer("reveal_delay").notNull().default(300), // Minutes
   createdAt: timestamp("created_at").defaultNow(),
   active: boolean("active").default(true)
 });

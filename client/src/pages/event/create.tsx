@@ -90,7 +90,7 @@ export default function CreateEvent() {
                 name="revealDelay"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Reveal Delay (hours)</FormLabel>
+                    <FormLabel>Reveal Delay (minutes)</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 

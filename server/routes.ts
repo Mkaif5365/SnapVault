@@ -1,3 +1,4 @@
+
 import type { Express } from "express";
 import { createServer } from "http";
 import { storage } from "./storage";
@@ -39,6 +40,19 @@ export async function registerRoutes(app: Express) {
       res.status(400).json({ message: "Invalid photo data" });
       return;
     }
+
+    const event = await storage.getEvent(parsed.data.eventId);
+    if (!event) {
+      res.status(404).json({ message: "Event not found" });
+      return;
+    }
+
+    const photos = await storage.getEventPhotos(parsed.data.eventId);
+    if (photos.length >= event.photoLimit) {
+      res.status(400).json({ message: "Photo limit exceeded" });
+      return;
+    }
+
     const photo = await storage.createPhoto(parsed.data);
     res.json(photo);
   });

@@ -9,6 +9,11 @@ interface Props {
 }
 
 export default function EventCard({ event }: Props) {
+  const isPhotoRevealed = (createdAt: Date) => {
+    const revealTime = new Date(createdAt.getTime() + event.revealDelay * 60 * 1000);
+    return new Date() >= revealTime;
+  };
+
   return (
     <Link href={`/event/${event.id}`}>
       <motion.div
@@ -33,7 +38,7 @@ export default function EventCard({ event }: Props) {
               </div>
               <div className="flex items-center text-sm text-muted-foreground">
                 <Clock className="w-4 h-4 mr-2" />
-                <span>Reveal After: {event.revealDelay}h</span>
+                <span>Reveal After: {event.revealDelay} minutes</span>
               </div>
               <div className="flex items-center text-sm text-muted-foreground">
                 <Calendar className="w-4 h-4 mr-2" />
