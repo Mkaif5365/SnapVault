@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { insertEventSchema, type InsertEvent } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
+import { v4 as uuidv4 } from "uuid";
 
 export default function CreateEvent() {
   const [, navigate] = useLocation();
@@ -17,6 +18,7 @@ export default function CreateEvent() {
     defaultValues: {
       name: "",
       description: "",
+      hostName: "",
       photoLimit: 3,
       revealDelay: 5
     }
@@ -24,10 +26,22 @@ export default function CreateEvent() {
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (data: InsertEvent) => {
-      const res = await apiRequest("POST", "/api/events", data);
+      // Generate a unique host ID
+      const hostId = uuidv4();
+      const eventData = { ...data, hostId };
+      
+      const res = await apiRequest("POST", "/api/events", eventData);
       return res.json();
     },
     onSuccess: (data) => {
+      // Store host information in localStorage
+      localStorage.setItem(`event_${data.id}_user`, JSON.stringify({
+        userId: data.hostId,
+        userName: data.hostName,
+        eventId: data.id,
+        isHost: true
+      }));
+      
       navigate(`/event/${data.id}`);
     }
   });
@@ -62,6 +76,19 @@ export default function CreateEvent() {
                     <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Input {...field} value={field.value ?? ''} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="hostName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Your Name (Host)</FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value ?? ''} placeholder="Enter your name" />
                     </FormControl>
                   </FormItem>
                 )}

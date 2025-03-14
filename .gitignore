@@ -1,6 +1,86 @@
-node_modules
-dist
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+yarn-error.log
+
+# Build outputs
+/dist/
+/build/
+/.next/
+/out/
+
+# Database
+*.db
+*.db-journal
+sqlite.db
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
 .DS_Store
-server/public
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Testing
+/coverage/
+.nyc_output/
+
+# Temporary files
+/tmp/
+/temp/
+*.tmp
+
+# Cache
+.cache/
+.eslintcache
+.npm
+.parcel-cache
+
+# Compiled output
+*.min.js
+*.min.css
+
+# Misc
+.replit
+.replitcache/
+.upm/
+server/public/
 vite.config.ts.*
 *.tar.gz
+
+# Large media files
+*.mp4
+*.tiff
+*.avi
+*.flv
+*.mov
+*.wmv
+
+# Attached assets (project documentation)
+attached_assets/

@@ -1,67 +1,83 @@
 import type { Event, InsertEvent, Photo, InsertPhoto } from "@shared/schema";
+import { db } from "./db";
+import { events, photos } from "../shared/schema";
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
   getEvents(): Promise<Event[]>;
   getEvent(id: number): Promise<Event | undefined>;
   createEvent(event: InsertEvent): Promise<Event>;
+  deleteEvent(id: number): Promise<boolean>;
   getEventPhotos(eventId: number): Promise<Photo[]>;
+  getUserEventPhotos(eventId: number, userId: string): Promise<Photo[]>;
   createPhoto(photo: InsertPhoto): Promise<Photo>;
 }
 
-export class MemStorage implements IStorage {
-  private events: Map<number, Event>;
-  private photos: Map<number, Photo>;
-  private eventId: number;
-  private photoId: number;
-
-  constructor() {
-    this.events = new Map();
-    this.photos = new Map();
-    this.eventId = 1;
-    this.photoId = 1;
-  }
-
+export class SqliteStorage implements IStorage {
   async getEvents(): Promise<Event[]> {
-    return Array.from(this.events.values());
+    return await db.select().from(events).orderBy(events.createdAt);
   }
 
   async getEvent(id: number): Promise<Event | undefined> {
-    return this.events.get(id);
+    const result = await db.select().from(events).where(eq(events.id, id));
+    return result[0];
   }
 
   async createEvent(insertEvent: InsertEvent): Promise<Event> {
-    const id = this.eventId++;
-    const event: Event = {
-      id,
+    const result = await db.insert(events).values({
       name: insertEvent.name,
       description: insertEvent.description ?? null,
+      hostId: insertEvent.hostId ?? null,
+      hostName: insertEvent.hostName ?? null,
       photoLimit: insertEvent.photoLimit ?? 5,
       revealDelay: insertEvent.revealDelay ?? 24,
       createdAt: new Date(),
       active: true
-    };
-    this.events.set(id, event);
-    return event;
+    }).returning();
+    
+    return result[0];
+  }
+
+  async deleteEvent(id: number): Promise<boolean> {
+    try {
+      // First delete all photos associated with the event
+      await db.delete(photos).where(eq(photos.eventId, id));
+      
+      // Then delete the event itself
+      const result = await db.delete(events).where(eq(events.id, id)).returning();
+      
+      return result.length > 0;
+    } catch (error) {
+      console.error("Error deleting event:", error);
+      return false;
+    }
   }
 
   async getEventPhotos(eventId: number): Promise<Photo[]> {
-    return Array.from(this.photos.values()).filter(
-      photo => photo.eventId === eventId
+    return await db.select().from(photos).where(eq(photos.eventId, eventId));
+  }
+
+  async getUserEventPhotos(eventId: number, userId: string): Promise<Photo[]> {
+    return await db.select().from(photos).where(
+      and(
+        eq(photos.eventId, eventId),
+        eq(photos.userId, userId)
+      )
     );
   }
 
   async createPhoto(insertPhoto: InsertPhoto): Promise<Photo> {
-    const id = this.photoId++;
-    const photo: Photo = {
-      id,
+    const result = await db.insert(photos).values({
       eventId: insertPhoto.eventId,
+      userId: insertPhoto.userId ?? null,
+      userName: insertPhoto.userName ?? null,
       imageUrl: insertPhoto.imageUrl,
       filter: insertPhoto.filter ?? null,
       takenAt: new Date()
-    };
-    this.photos.set(id, photo);
-    return photo;
+    }).returning();
+    
+    return result[0];
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new SqliteStorage();

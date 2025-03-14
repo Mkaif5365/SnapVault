@@ -1,9 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Camera } from "lucide-react";
 import EventCard from "@/components/event/EventCard";
+import { useToast } from "@/hooks/use-toast";
 import type { Event } from "@shared/schema";
 
 const container = {
@@ -22,9 +23,47 @@ const item = {
 };
 
 export default function Home() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
   const { data: events, isLoading } = useQuery<Event[]>({ 
     queryKey: ['/api/events']
   });
+
+  const deleteEventMutation = useMutation({
+    mutationFn: async (eventId: number) => {
+      const response = await fetch(`/api/events/${eventId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete event');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidate and refetch events after deletion
+      queryClient.invalidateQueries({ queryKey: ['/api/events'] });
+      toast({
+        title: "Event deleted",
+        description: "The event has been successfully deleted.",
+        variant: "default",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete event. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleDeleteEvent = (eventId: number) => {
+    deleteEventMutation.mutate(eventId);
+  };
 
   if (isLoading) {
     return (
@@ -84,7 +123,7 @@ export default function Home() {
         >
           {events?.map((event) => (
             <motion.div key={event.id} variants={item}>
-              <EventCard event={event} />
+              <EventCard event={event} onDelete={handleDeleteEvent} />
             </motion.div>
           ))}
           {events?.length === 0 && (

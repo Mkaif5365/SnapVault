@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import type { Photo } from "@shared/schema";
-import { Download, ArrowLeft, X } from "lucide-react";
+import { Download, ArrowLeft, X, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -21,6 +21,7 @@ interface Props {
 export default function PhotoGrid({ photos, onBack, revealDelay }: Props) {
   const [open, setOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [revealedPhotos, setRevealedPhotos] = useState<string[]>([]); // Track revealed photos
 
   const handleDownload = async (imageUrl: string) => {
@@ -89,14 +90,27 @@ export default function PhotoGrid({ photos, onBack, revealDelay }: Props) {
                 <AlertDialogTrigger asChild>
                   <button
                     className="w-full aspect-square relative group"
-                    onClick={() => setSelectedImage(photo.imageUrl)}
+                    onClick={() => {
+                      setSelectedImage(photo.imageUrl);
+                      setSelectedPhoto(photo);
+                    }}
                   >
                     {isPhotoRevealed(photo) ? (
-                      <img
-                        src={photo.imageUrl}
-                        alt="Photo"
-                        className="w-full h-full object-cover"
-                      />
+                      <div className="relative w-full h-full">
+                        <img
+                          src={photo.imageUrl}
+                          alt="Photo"
+                          className="w-full h-full object-cover"
+                        />
+                        {photo.userName && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white p-2 text-sm">
+                            <div className="flex items-center">
+                              <UserCircle className="w-4 h-4 mr-1" />
+                              <span>{photo.userName}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     ) : (
                       <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center flex-col">
                         <p className="text-sm text-gray-500">Photo will be revealed in</p>
@@ -129,6 +143,17 @@ export default function PhotoGrid({ photos, onBack, revealDelay }: Props) {
                         <X className="h-5 w-5" />
                       </Button>
                     </div>
+                    {selectedPhoto?.userName && (
+                      <div className="absolute bottom-4 left-4 right-4 bg-black/60 text-white p-2 rounded">
+                        <div className="flex items-center">
+                          <UserCircle className="w-5 h-5 mr-2" />
+                          <span>Photo by: {selectedPhoto.userName}</span>
+                        </div>
+                        <div className="text-xs text-gray-300 mt-1">
+                          Taken at: {new Date(selectedPhoto.takenAt!).toLocaleString()}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </AlertDialogContent>
               </AlertDialog>

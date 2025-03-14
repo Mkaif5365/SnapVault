@@ -1,4 +1,3 @@
-
 import type { Express } from "express";
 import { createServer } from "http";
 import { storage } from "./storage";
@@ -29,6 +28,18 @@ export async function registerRoutes(app: Express) {
     res.json(event);
   });
 
+  app.delete("/api/events/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    const success = await storage.deleteEvent(id);
+    
+    if (!success) {
+      res.status(404).json({ message: "Event not found or could not be deleted" });
+      return;
+    }
+    
+    res.status(200).json({ message: "Event deleted successfully" });
+  });
+
   app.get("/api/events/:id/photos", async (req, res) => {
     const photos = await storage.getEventPhotos(parseInt(req.params.id));
     res.json(photos);
@@ -47,10 +58,20 @@ export async function registerRoutes(app: Express) {
       return;
     }
 
-    const photos = await storage.getEventPhotos(parsed.data.eventId);
-    if (photos.length >= event.photoLimit) {
-      res.status(400).json({ message: "Photo limit exceeded" });
-      return;
+    // Check if user has reached their photo limit for this event
+    if (parsed.data.userId) {
+      const userPhotos = await storage.getUserEventPhotos(parsed.data.eventId, parsed.data.userId);
+      if (userPhotos.length >= event.photoLimit) {
+        res.status(400).json({ message: `You've reached your limit of ${event.photoLimit} photos for this event` });
+        return;
+      }
+    } else {
+      // If no user ID is provided, fall back to the old behavior
+      const photos = await storage.getEventPhotos(parsed.data.eventId);
+      if (photos.length >= event.photoLimit) {
+        res.status(400).json({ message: "Photo limit exceeded" });
+        return;
+      }
     }
 
     const photo = await storage.createPhoto(parsed.data);
