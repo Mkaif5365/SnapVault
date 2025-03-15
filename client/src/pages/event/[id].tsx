@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CameraView from "@/components/camera/CameraView";
@@ -18,6 +18,7 @@ interface UserInfo {
 
 export default function EventPage() {
   const { id } = useParams();
+  const [, navigate] = useLocation();
   const eventId = id ? parseInt(id) : 0;
   const [activeTab, setActiveTab] = useState("camera");
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -57,6 +58,19 @@ export default function EventPage() {
     }
   }, [event, userInfo, eventId]);
 
+  // Handle back button click
+  const handleBackClick = () => {
+    // Check if user is logged in
+    const token = localStorage.getItem("auth_token");
+    if (token) {
+      // If logged in, go to dashboard
+      navigate("/dashboard");
+    } else {
+      // If not logged in, go to home
+      navigate("/");
+    }
+  };
+
   if (isLoading) {
     return <div className="container mx-auto p-4 text-center">Loading event...</div>;
   }
@@ -70,7 +84,7 @@ export default function EventPage() {
       <div className="flex items-center mb-6">
         <Button 
           variant="ghost" 
-          onClick={() => window.location.href = '/'}
+          onClick={handleBackClick}
           className="mr-4"
         >
           <ArrowLeft className="h-5 w-5" />

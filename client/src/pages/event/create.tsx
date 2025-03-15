@@ -8,17 +8,27 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { insertEventSchema, type InsertEvent } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
-import { v4 as uuidv4 } from "uuid";
+import { useEffect, useState } from "react";
 
 export default function CreateEvent() {
   const [, navigate] = useLocation();
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Check if user is logged in
+  useEffect(() => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+    setIsLoading(false);
+  }, [navigate]);
   
   const form = useForm<InsertEvent>({
     resolver: zodResolver(insertEventSchema),
     defaultValues: {
       name: "",
       description: "",
-      hostName: "",
       photoLimit: 3,
       revealDelay: 5
     }
@@ -26,25 +36,27 @@ export default function CreateEvent() {
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (data: InsertEvent) => {
-      // Generate a unique host ID
-      const hostId = uuidv4();
-      const eventData = { ...data, hostId };
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        throw new Error("Authentication required");
+      }
       
-      const res = await apiRequest("POST", "/api/events", eventData);
+      const res = await apiRequest("POST", "/api/auth/events", data, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
       return res.json();
     },
     onSuccess: (data) => {
-      // Store host information in localStorage
-      localStorage.setItem(`event_${data.id}_user`, JSON.stringify({
-        userId: data.hostId,
-        userName: data.hostName,
-        eventId: data.id,
-        isHost: true
-      }));
-      
       navigate(`/event/${data.id}`);
     }
   });
+
+  if (isLoading) {
+    return <div className="container mx-auto p-4 text-center">Loading...</div>;
+  }
 
   return (
     <div className="container mx-auto p-4 max-w-lg">
@@ -76,19 +88,6 @@ export default function CreateEvent() {
                     <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Input {...field} value={field.value ?? ''} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="hostName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Your Name (Host)</FormLabel>
-                    <FormControl>
-                      <Input {...field} value={field.value ?? ''} placeholder="Enter your name" />
                     </FormControl>
                   </FormItem>
                 )}

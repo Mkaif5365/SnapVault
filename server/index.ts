@@ -7,6 +7,7 @@ import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import Database from 'better-sqlite3';
+import { SqliteStorage } from './storage';
 
 // Initialize the database
 initializeDatabase();
@@ -16,6 +17,10 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.urlencoded({ extended: false }));
+
+// Set up storage
+const storage = new SqliteStorage();
+app.set("storage", storage);
 
 app.use((req, res, next) => {
   const start = Date.now();

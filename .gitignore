@@ -3,17 +3,29 @@ node_modules/
 /.pnp
 .pnp.js
 yarn-error.log
+package-lock.json
+yarn.lock
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
 
 # Build outputs
 /dist/
 /build/
 /.next/
 /out/
+/client/dist/
+/server/dist/
+.vercel
+.netlify
 
 # Database
 *.db
 *.db-journal
 sqlite.db
+*.sqlite
+*.sqlite3
 
 # Environment variables
 .env
@@ -21,6 +33,7 @@ sqlite.db
 .env.development.local
 .env.test.local
 .env.production.local
+.env*.local
 
 # Debug logs
 npm-debug.log*
@@ -28,6 +41,7 @@ yarn-debug.log*
 yarn-error.log*
 logs/
 *.log
+lerna-debug.log*
 
 # IDE and editor files
 .idea/
@@ -37,6 +51,16 @@ logs/
 .DS_Store
 *.sublime-project
 *.sublime-workspace
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 # OS generated files
 .DS_Store
@@ -46,25 +70,36 @@ logs/
 .Trashes
 ehthumbs.db
 Thumbs.db
+desktop.ini
 
 # Testing
 /coverage/
 .nyc_output/
+/cypress/videos/
+/cypress/screenshots/
+.jest-cache
 
 # Temporary files
 /tmp/
 /temp/
 *.tmp
+.temp
 
 # Cache
 .cache/
 .eslintcache
 .npm
 .parcel-cache
+.turbo
+.webpack
+.rollup.cache
+tsconfig.tsbuildinfo
 
 # Compiled output
 *.min.js
 *.min.css
+*.js.map
+*.css.map
 
 # Misc
 .replit
@@ -73,6 +108,9 @@ Thumbs.db
 server/public/
 vite.config.ts.*
 *.tar.gz
+.history/
+stats.html
+storybook-static/
 
 # Large media files
 *.mp4
@@ -81,6 +119,41 @@ vite.config.ts.*
 *.flv
 *.mov
 *.wmv
+*.webm
+*.mp3
+*.wav
+*.ogg
+*.pdf
+*.psd
+*.ai
+*.eps
+*.zip
+*.rar
+*.7z
+*.gz
 
 # Attached assets (project documentation)
 attached_assets/
+
+# Local uploads
+uploads/
+/public/uploads/
+/server/uploads/
+
+# Generated files
+.docusaurus
+.serverless/
+.fusebox/
+.dynamodb/
+.tern-port
+.vscode-test
+.vuepress/dist
+.docz
+.now
+.firebase/
+
+# PWA files
+**/public/workbox-*.js
+**/public/sw.js
+**/public/service-worker.js
+**/public/fallback-*.js
