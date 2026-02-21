@@ -284,24 +284,25 @@ export default function EventDetailPage() {
                     <p className="text-xs text-stone-500">Prevent new participants from joining</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button
-                      variant={event.is_locked ? "secondary" : "destructive"}
-                      size="sm"
-                      className={`rounded-full text-xs ${event.is_locked ? 'opacity-50 grayscale' : ''}`}
-                      disabled={event.is_locked}
-                      onClick={handleToggleLock}
-                    >
-                      <Lock className="w-3.5 h-3.5 mr-1" /> Lock Vault
-                    </Button>
-                    <Button
-                      variant={!event.is_locked ? "secondary" : "outline"}
-                      size="sm"
-                      className={`rounded-full text-xs ${!event.is_locked ? 'opacity-50 grayscale' : ''}`}
-                      disabled={!event.is_locked}
-                      onClick={handleToggleLock}
-                    >
-                      <Unlock className="w-3.5 h-3.5 mr-1" /> Unlock Vault
-                    </Button>
+                    {event.is_locked ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-full text-xs"
+                        onClick={handleToggleLock}
+                      >
+                        <Unlock className="w-3.5 h-3.5 mr-1" /> Unlock Vault
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="rounded-full text-xs"
+                        onClick={handleToggleLock}
+                      >
+                        <Lock className="w-3.5 h-3.5 mr-1" /> Lock Vault
+                      </Button>
+                    )}
                   </div>
                 </div>
 
