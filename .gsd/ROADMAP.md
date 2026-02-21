@@ -22,7 +22,7 @@
 
 ### Phase 2: Event Management
 
-**Status**: ⬜ Not Started
+**Status**: ✅ Complete
 **Objective**: Create Host Dashboard, Event creation (with limits/codes), and Joining flow.
 **Requirements**: FR-DASH-01, FR-EVNT-01, FR-EVNT-02, FR-EVNT-04, FR-JOIN-01
 

@@ -1,8 +1,20 @@
-# DECISIONS.md
+## Phase 3: Camera & Storage (Complete)
 
-# Architecture Decision Records (ADR)
+**Date:** 2026-02-21
+... (omitted for brevity)
 
-| Date        | Decision                         | Rationale                                                       | Status   |
-| ----------- | -------------------------------- | --------------------------------------------------------------- | -------- |
-| {TIMESTAMP} | Use Telegram Bot API for Storage | Low-cost, high-capacity, and supports the "developing" theme.   | Proposed |
-| {TIMESTAMP} | Next.js (App Router) + Supabase  | Modern full-stack capabilities with real-time and auth support. | Accepted |
+## Phase 4: Delay Logic & Reveal
+
+**Date:** 2026-02-21
+
+### UI/UX
+
+- **Developing Screen**: "Dark Room" aesthetic (charcoal bg, pulsating red light, vintage countdown).
+- **Roll Progress**: Show live photo count (e.g., "74/100 photos captured").
+- **Reveal Animation**: Dramatic blur-to-sharp animation when timer hits zero.
+- **Gallery**: Nostalgic contact sheet grid. Download all restricted to Host only.
+
+### Technical & Security
+
+- **Security**: Server-side checks for `reveal_time`. Photos remain locked in Supabase/API until time passes.
+- **Telegram Proxy**: All photos served via `/api/photo?id=[telegram_file_id]` to handle secure fetching and bypass direct storage access.
