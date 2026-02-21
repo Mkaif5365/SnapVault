@@ -65,25 +65,42 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-stone-50 border-stone-200">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-serif text-stone-900 italic">SnapVault</CardTitle>
-          <CardDescription className="text-stone-500">Create your Host account.</CardDescription>
+    <div className="min-h-screen bg-stone-950 flex flex-col items-center justify-center p-6 antialiased overflow-hidden relative">
+      {/* Ambient Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-900/10 rounded-full blur-[120px] pointer-events-none" />
+
+      <Link href="/" className="mb-12 flex items-center gap-3 group relative z-10 transition-transform hover:scale-105 active:scale-95">
+        <div className="w-10 h-10 rounded-full bg-stone-900 flex items-center justify-center text-stone-100 shadow-xl border border-stone-800 overflow-hidden">
+          <img src="/logo.png" alt="SnapVault" className="w-8 h-8 object-contain" />
+        </div>
+        <span className="text-2xl font-serif italic text-stone-100 tracking-tight">SnapVault</span>
+      </Link>
+
+      <Card className="w-full max-w-md bg-stone-900/40 border border-stone-800/50 backdrop-blur-xl shadow-2xl relative z-10 overflow-hidden">
+        {/* Top Decoration */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
+        
+        <CardHeader className="space-y-2 pt-10 pb-6 text-center">
+          <CardTitle className="text-3xl font-serif italic text-stone-100">Start Hosting</CardTitle>
+          <CardDescription className="text-stone-500 font-light">Create your Host account to start your first vault.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pb-10">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-stone-700">Email</FormLabel>
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-[10px] uppercase tracking-[0.2em] text-stone-500 font-mono ml-1">Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="host@example.com" {...field} className="bg-white border-stone-300 focus-visible:ring-stone-400" />
+                      <Input 
+                        placeholder="host@example.com" 
+                        {...field} 
+                        className="h-12 bg-stone-950/50 border-stone-800 text-stone-100 placeholder:text-stone-700 focus-visible:ring-amber-500/30 focus-visible:border-amber-500/50 rounded-xl transition-all" 
+                      />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-400 text-[10px] uppercase tracking-wider font-mono" />
                   </FormItem>
                 )}
               />
@@ -91,12 +108,17 @@ export default function RegisterPage() {
                 control={form.control}
                 name="password"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-stone-700">Password</FormLabel>
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-[10px] uppercase tracking-[0.2em] text-stone-500 font-mono ml-1">Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••" {...field} className="bg-white border-stone-300 focus-visible:ring-stone-400" />
+                      <Input 
+                        type="password" 
+                        placeholder="••••••" 
+                        {...field} 
+                        className="h-12 bg-stone-950/50 border-stone-800 text-stone-100 placeholder:text-stone-700 focus-visible:ring-amber-500/30 focus-visible:border-amber-500/50 rounded-xl transition-all" 
+                      />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-400 text-[10px] uppercase tracking-wider font-mono" />
                   </FormItem>
                 )}
               />
@@ -104,29 +126,46 @@ export default function RegisterPage() {
                 control={form.control}
                 name="confirmPassword"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-stone-700">Confirm Password</FormLabel>
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-[10px] uppercase tracking-[0.2em] text-stone-500 font-mono ml-1">Confirm Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••" {...field} className="bg-white border-stone-300 focus-visible:ring-stone-400" />
+                      <Input 
+                        type="password" 
+                        placeholder="••••••" 
+                        {...field} 
+                        className="h-12 bg-stone-950/50 border-stone-800 text-stone-100 placeholder:text-stone-700 focus-visible:ring-amber-500/30 focus-visible:border-amber-500/50 rounded-xl transition-all" 
+                      />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-400 text-[10px] uppercase tracking-wider font-mono" />
                   </FormItem>
                 )}
               />
-              {error && <p className="text-sm text-red-500 text-center">{error}</p>}
-              <Button type="submit" className="w-full bg-stone-900 text-stone-50 hover:bg-stone-800 shadow-sm hover:shadow-md active:scale-[0.98] transition-all cursor-pointer" disabled={loading}>
+              {error && (
+                <div className="p-3 rounded-xl bg-red-950/30 border border-red-900/50 text-red-400 text-xs text-center animate-in fade-in slide-in-from-top-2">
+                  {error}
+                </div>
+              )}
+              <Button 
+                type="submit" 
+                className="w-full h-12 bg-amber-500 text-stone-950 hover:bg-amber-400 rounded-xl font-medium transition-all active:scale-[0.98] shadow-lg shadow-amber-500/10" 
+                disabled={loading}
+              >
                 {loading ? "Registering..." : "Register"}
               </Button>
             </form>
           </Form>
-          <div className="mt-6 text-center text-sm">
-            <span className="text-stone-500">Already have an account? </span>
-            <Link href="/login" className="text-stone-900 font-medium hover:underline">
+          <div className="mt-8 text-center text-sm">
+            <span className="text-stone-500 font-light">Already have an account? </span>
+            <Link href="/login" className="text-stone-300 hover:text-amber-500 transition-colors underline underline-offset-4 decoration-stone-800 hover:decoration-amber-500/30">
               Login
             </Link>
           </div>
         </CardContent>
       </Card>
+
+      <footer className="mt-12 text-stone-700 text-[10px] font-mono tracking-[0.3em] uppercase">
+        SnapVault // Start Your Roll
+      </footer>
     </div>
   )
 }

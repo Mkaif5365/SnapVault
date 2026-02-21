@@ -73,24 +73,24 @@
 
 @layer base {
   :root {
-    --background: var(--color-stone-100);
-    --foreground: var(--color-stone-950);
-    --card: var(--color-stone-50);
-    --card-foreground: var(--color-stone-950);
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: var(--color-stone-900);
-    --primary-foreground: var(--color-stone-50);
-    --secondary: var(--color-stone-200);
-    --secondary-foreground: var(--color-stone-900);
-    --muted: var(--color-stone-200);
-    --muted-foreground: var(--color-stone-500);
-    --accent: var(--color-stone-200);
-    --accent-foreground: var(--color-stone-900);
+    --background: var(--color-stone-950);
+    --foreground: var(--color-stone-100);
+    --card: var(--color-stone-900);
+    --card-foreground: var(--color-stone-100);
+    --popover: var(--color-stone-950);
+    --popover-foreground: var(--color-stone-100);
+    --primary: var(--color-stone-100);
+    --primary-foreground: var(--color-stone-950);
+    --secondary: var(--color-stone-800);
+    --secondary-foreground: var(--color-stone-100);
+    --muted: var(--color-stone-800);
+    --muted-foreground: var(--color-stone-400);
+    --accent: var(--color-stone-800);
+    --accent-foreground: var(--color-stone-100);
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: var(--color-stone-200);
-    --input: var(--color-stone-200);
+    --border: var(--color-stone-800);
+    --input: var(--color-stone-800);
     --ring: var(--color-stone-400);
     --radius: 0.75rem;
   }

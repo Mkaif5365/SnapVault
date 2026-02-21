@@ -187,84 +187,89 @@ export default function EventDetailPage() {
   const joinUrl = typeof window !== 'undefined' ? `${window.location.origin}/${event.code}` : ''
 
   return (
-    <div className="min-h-screen bg-stone-100 p-4 md:p-8 font-sans">
-      <div className="max-w-4xl mx-auto space-y-8">
-        <Link href="/dashboard" className="inline-flex items-center text-stone-500 hover:text-stone-900 transition-colors gap-2 text-sm font-medium">
-          <ArrowLeft className="w-4 h-4" />
+    <div className="min-h-screen bg-stone-950 p-4 md:p-8 font-sans antialiased relative overflow-hidden">
+      {/* Ambient Glow */}
+      <div className="absolute top-1/4 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-900/5 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="max-w-4xl mx-auto space-y-8 relative z-10">
+        <Link href="/dashboard" className="inline-flex items-center text-stone-500 hover:text-amber-500 transition-all gap-2 text-[10px] uppercase tracking-[0.2em] font-mono group">
+          <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
           Back to Dashboard
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left: Event Info */}
-          <div className="lg:col-span-2 space-y-6">
-            <header className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className={`text-[10px] uppercase tracking-widest px-2 py-1 rounded-full ${isRevealed ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                    {isRevealed ? 'Revealed' : 'Developing'}
-                  </span>
-                  {event.is_locked && (
-                    <span className="text-[10px] uppercase tracking-widest px-2 py-1 rounded-full bg-red-100 text-red-700">
-                      Locked
+          <div className="lg:col-span-2 space-y-8">
+            <header className="space-y-6">
+              <div className="flex items-start justify-between">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <span className={`text-[9px] uppercase tracking-[0.2em] px-2.5 py-1 rounded-full font-mono font-bold ${isRevealed ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'}`}>
+                      {isRevealed ? 'Revealed' : 'Developing'}
                     </span>
-                  )}
-                  <h1 className="text-4xl font-serif text-stone-900 italic capitalize">{event.name}</h1>
+                    {event.is_locked && (
+                      <span className="text-[9px] uppercase tracking-[0.2em] px-2.5 py-1 rounded-full font-mono font-bold bg-red-500/10 text-red-500 border border-red-500/20">
+                        Locked
+                      </span>
+                    )}
+                  </div>
+                  <h1 className="text-5xl md:text-6xl font-serif text-stone-100 italic tracking-tight leading-tight capitalize">{event.name}</h1>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded-full h-8 px-3 text-xs"
+                  className="text-stone-600 hover:text-red-400 transition-colors h-10 px-4 rounded-xl text-xs font-mono uppercase tracking-wider"
                   onClick={handleDelete}
                 >
-                  <Trash2 className="w-3.5 h-3.5 mr-1" />
-                  Delete
+                  <Trash2 className="w-3.5 h-3.5 mr-2" />
+                  Discard Roll
                 </Button>
               </div>
-              <p className="text-stone-500 leading-relaxed">{event.description || "No description provided."}</p>
+              <p className="text-stone-400 text-lg leading-relaxed font-light max-w-2xl">{event.description || "No description provided."}</p>
             </header>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <Card className="bg-white border-stone-200">
-                <CardContent className="pt-5 pb-4">
-                  <Calendar className="w-4 h-4 text-stone-400 mb-2" />
-                  <p className="text-[9px] uppercase tracking-wider text-stone-400">Reveal</p>
-                  <p className="font-medium text-stone-900 text-sm">{revealDate.toLocaleDateString()}</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
+                <CardContent className="pt-6 pb-5 flex flex-col items-center">
+                  <Calendar className="w-4 h-4 text-stone-600 mb-3" />
+                  <p className="text-[9px] uppercase tracking-[0.2em] text-stone-500 font-mono mb-1">Reveal</p>
+                  <p className="font-medium text-stone-100 text-sm">{revealDate.toLocaleDateString()}</p>
                 </CardContent>
               </Card>
-              <Card className="bg-white border-stone-200">
-                <CardContent className="pt-5 pb-4">
-                  <Users className="w-4 h-4 text-stone-400 mb-2" />
-                  <p className="text-[9px] uppercase tracking-wider text-stone-400">Participants</p>
-                  <p className="font-medium text-stone-900 text-sm">{participantsCount}</p>
+              <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
+                <CardContent className="pt-6 pb-5 flex flex-col items-center">
+                  <Users className="w-4 h-4 text-stone-600 mb-3" />
+                  <p className="text-[9px] uppercase tracking-[0.2em] text-stone-500 font-mono mb-1">Guests</p>
+                  <p className="font-medium text-stone-100 text-sm">{participantsCount}</p>
                 </CardContent>
               </Card>
-              <Card className="bg-white border-stone-200">
-                <CardContent className="pt-5 pb-4">
-                  <Camera className="w-4 h-4 text-stone-400 mb-2" />
-                  <p className="text-[9px] uppercase tracking-wider text-stone-400">Photos</p>
-                  <p className="font-medium text-stone-900 text-sm">{photosCount} / {event.photo_limit}</p>
+              <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
+                <CardContent className="pt-6 pb-5 flex flex-col items-center">
+                  <Camera className="w-4 h-4 text-stone-600 mb-3" />
+                  <p className="text-[9px] uppercase tracking-[0.2em] text-stone-500 font-mono mb-1">Exposure</p>
+                  <p className="font-medium text-stone-100 text-sm">{photosCount} / {event.photo_limit}</p>
                 </CardContent>
               </Card>
-              <Card className="bg-white border-stone-200">
-                <CardContent className="pt-5 pb-4">
-                  <Trophy className="w-4 h-4 text-amber-500 mb-2" />
-                  <p className="text-[9px] uppercase tracking-wider text-stone-400">Top Snapper</p>
-                  <p className="font-medium text-stone-900 text-sm truncate">{topPhotographer || '—'}</p>
+              <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
+                <CardContent className="pt-6 pb-5 flex flex-col items-center">
+                  <Trophy className="w-4 h-4 text-amber-500/70 mb-3" />
+                  <p className="text-[9px] uppercase tracking-[0.2em] text-stone-500 font-mono mb-1">Best Shot</p>
+                  <p className="font-medium text-stone-100 text-sm truncate w-full text-center">{topPhotographer || '—'}</p>
                 </CardContent>
               </Card>
             </div>
 
             {/* Utilization Bar */}
-            <Card className="bg-white border-stone-200">
-              <CardContent className="pt-5 pb-4 space-y-3">
-                <div className="flex justify-between text-xs font-mono">
-                  <span className="text-stone-500">ROLL UTILIZATION</span>
-                  <span className="text-stone-900">{event.photo_limit > 0 ? Math.round((photosCount / event.photo_limit) * 100) : 0}%</span>
+            <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl overflow-hidden">
+              <CardContent className="pt-6 pb-6 space-y-4">
+                <div className="flex justify-between items-center text-[10px] uppercase font-mono tracking-[0.2em]">
+                  <span className="text-stone-500">フィルム使用量 / Roll Utilization</span>
+                  <span className="text-amber-500">{event.photo_limit > 0 ? Math.round((photosCount / event.photo_limit) * 100) : 0}%</span>
                 </div>
-                <div className="w-full bg-stone-100 h-2 rounded-full overflow-hidden border border-stone-200">
+                <div className="w-full bg-stone-950 h-3 rounded-full overflow-hidden border border-stone-900 inner-shadow">
                   <div
-                    className="bg-stone-900 h-full transition-all duration-1000"
+                    className="bg-gradient-to-r from-amber-600 to-amber-400 h-full transition-all duration-1000 shadow-[0_0_15px_rgba(245,158,11,0.3)]"
                     style={{ width: `${Math.min(100, event.photo_limit > 0 ? (photosCount / event.photo_limit) * 100 : 0)}%` }}
                   />
                 </div>
@@ -272,16 +277,16 @@ export default function EventDetailPage() {
             </Card>
 
             {/* Host Controls */}
-            <Card className="bg-white border-stone-200">
-              <CardHeader>
-                <CardTitle className="text-lg font-serif italic">Host Controls</CardTitle>
+            <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
+              <CardHeader className="border-b border-stone-800/50 pb-4">
+                <CardTitle className="text-xl font-serif italic text-stone-100 tracking-tight">Darkroom Controls</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-5">
+              <CardContent className="space-y-0 p-0">
                 {/* Lock/Unlock */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between p-6 hover:bg-stone-800/20 transition-colors">
                   <div>
-                    <p className="text-sm font-medium text-stone-900">Event Lock</p>
-                    <p className="text-xs text-stone-500">Prevent new participants from joining</p>
+                    <p className="text-sm font-medium text-stone-100">Vault Security</p>
+                    <p className="text-xs text-stone-500 mt-0.5">Control entrance to the digital vault</p>
                   </div>
                   <div className="flex items-center gap-2">
                     {event?.is_locked ? (
@@ -289,83 +294,83 @@ export default function EventDetailPage() {
                         key="unlock-btn"
                         variant="outline"
                         size="sm"
-                        className="rounded-full text-xs font-medium border-stone-300 bg-white text-stone-900 hover:bg-stone-50"
+                        className="rounded-full text-[10px] uppercase tracking-wider font-mono border-stone-700 bg-stone-900 text-stone-100 hover:bg-stone-800 transition-all active:scale-95"
                         onClick={handleToggleLock}
                       >
-                        <Unlock className="w-3.5 h-3.5 mr-1" /> Unlock Vault
+                        <Unlock className="w-3 h-3 mr-2" /> Open Entry
                       </Button>
                     ) : (
                       <Button
                         key="lock-btn"
-                        variant="destructive"
                         size="sm"
-                        className="rounded-full text-xs font-medium bg-red-600 hover:bg-red-700 text-white shadow-sm"
+                        className="rounded-full text-[10px] uppercase tracking-wider font-mono bg-red-600/10 text-red-500 border border-red-500/20 hover:bg-red-600/20 hover:text-red-400 transition-all active:scale-95"
                         onClick={handleToggleLock}
                       >
-                        <Lock className="w-3.5 h-3.5 mr-1" /> Lock Vault
+                        <Lock className="w-3 h-3 mr-2" /> Close Entry
                       </Button>
                     )}
                   </div>
                 </div>
 
-                <hr className="border-stone-100" />
+                <div className="h-px bg-stone-800/50 mx-6" />
 
                 {/* Reveal Time */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-stone-900">Reveal Time</p>
-                      <p className="text-xs text-stone-500">Adjust when photos are revealed</p>
-                    </div>
+                <div className="p-6 space-y-4 hover:bg-stone-800/20 transition-colors">
+                  <div>
+                    <p className="text-sm font-medium text-stone-100">Development Timer</p>
+                    <p className="text-xs text-stone-500 mt-0.5">Adjust when photos are automatically revealed</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <input
                       type="datetime-local"
                       value={newRevealTime}
                       onChange={(e) => setNewRevealTime(e.target.value)}
-                      className="flex-1 bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-sm text-stone-900"
+                      className="flex-1 bg-stone-950/50 border border-stone-800 rounded-xl px-4 py-2 text-sm text-stone-100 focus:outline-none focus:border-amber-500/50"
                     />
-                    <Button size="sm" className="rounded-full text-xs" onClick={handleRevealTimeUpdate}>
-                      <Clock className="w-3.5 h-3.5 mr-1" /> Update
+                    <Button size="sm" className="bg-amber-500 text-stone-950 hover:bg-amber-400 rounded-xl px-5 text-[11px] font-bold" onClick={handleRevealTimeUpdate}>
+                      Set Timer
                     </Button>
                   </div>
                 </div>
 
-                <hr className="border-stone-100" />
+                <div className="h-px bg-stone-800/50 mx-6" />
 
                 {/* Promocode */}
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-stone-900">Apply Promo Code</p>
-                  <div className="flex items-center gap-2">
+                <div className="p-6 space-y-4 hover:bg-stone-800/20 transition-colors">
+                  <div>
+                    <p className="text-sm font-medium text-stone-100">Film Expansion</p>
+                    <p className="text-xs text-stone-500 mt-0.5">Use codes to increase photo capacity</p>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
                     <input
                       type="text"
-                      placeholder="Enter code..."
+                      placeholder="ENTER PROMOCYCLE..."
                       value={promoCode}
                       onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                      className="flex-1 bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-sm font-mono uppercase tracking-wider text-stone-900"
+                      className="flex-1 bg-stone-950/50 border border-stone-800 rounded-xl px-4 py-2 text-sm font-mono uppercase tracking-widest text-stone-100 placeholder:text-stone-700 focus:outline-none focus:border-amber-500/50"
                     />
-                    <Button size="sm" className="rounded-full text-xs" onClick={handleApplyPromo}>
-                      <Tag className="w-3.5 h-3.5 mr-1" /> Apply
+                    <Button size="sm" className="bg-stone-800 text-stone-100 hover:bg-stone-700 rounded-xl px-5 text-[11px] font-bold" onClick={handleApplyPromo}>
+                      Apply
                     </Button>
                   </div>
                   {promoStatus && (
-                    <p className={`text-xs ${promoStatus.startsWith('✓') ? 'text-green-600' : promoStatus.startsWith('✗') ? 'text-red-600' : 'text-stone-500'}`}>
+                    <p className={`text-[10px] uppercase tracking-widest font-mono text-center ${promoStatus.startsWith('✓') ? 'text-green-400' : promoStatus.startsWith('✗') ? 'text-red-400' : 'text-stone-500'}`}>
                       {promoStatus}
                     </p>
                   )}
                 </div>
 
-                <hr className="border-stone-100" />
+                <div className="h-px bg-stone-800/50 mx-6" />
 
                 {/* Download All */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between p-6 hover:bg-stone-800/20 transition-colors">
                   <div>
-                    <p className="text-sm font-medium text-stone-900">Download All Photos</p>
-                    <p className="text-xs text-stone-500">ZIP archive of all captured photos</p>
+                    <p className="text-sm font-medium text-stone-100">Batch Export</p>
+                    <p className="text-xs text-stone-500 mt-0.5">Export all exposures as a ZIP archive</p>
                   </div>
                   <a href={`/api/events/${id}/download`} download>
-                    <Button size="sm" className="rounded-full text-xs" disabled={photosCount === 0}>
-                      <Download className="w-3.5 h-3.5 mr-1" /> Download ZIP
+                    <Button variant="outline" size="sm" className="rounded-full text-[10px] uppercase tracking-wider font-mono border-stone-700 text-stone-400 hover:bg-stone-800 hover:text-stone-100" disabled={photosCount === 0}>
+                      <Download className="w-3.5 h-3.5 mr-2" /> ZIP Archive
                     </Button>
                   </a>
                 </div>
@@ -373,44 +378,46 @@ export default function EventDetailPage() {
             </Card>
 
             {/* Participants List */}
-            <Card className="bg-white border-stone-200">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg font-serif italic">Participants</CardTitle>
-                <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => setShowParticipants(!showParticipants)}>
-                  <Users className="w-3.5 h-3.5 mr-1" />
-                  {showParticipants ? 'Hide' : `View (${participants.length})`}
+            <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
+              <CardHeader className="flex flex-row items-center justify-between border-b border-stone-800/50 pb-4">
+                <CardTitle className="text-xl font-serif italic text-stone-100 tracking-tight">Gallery Access</CardTitle>
+                <Button variant="ghost" size="sm" className="rounded-full text-[10px] uppercase tracking-[0.2em] font-mono text-stone-500 hover:text-amber-500" onClick={() => setShowParticipants(!showParticipants)}>
+                  <Users className="w-3.5 h-3.5 mr-2" />
+                  {showParticipants ? 'Close' : `View (${participants.length})`}
                 </Button>
               </CardHeader>
               {showParticipants && (
-                <CardContent>
+                <CardContent className="pt-6">
                   {participants.length === 0 ? (
-                    <p className="text-stone-400 text-sm italic text-center py-4">No participants yet.</p>
+                    <p className="text-stone-600 text-xs italic text-center py-4 font-mono uppercase tracking-widest">No active participants</p>
                   ) : (
                     <div className="space-y-2">
-                      {participants.map((p) => (
-                        <div key={p.id} className={`flex items-center justify-between p-3 rounded-xl border ${
-                          p.status === 'active' ? 'bg-stone-50 border-stone-200' :
-                          p.status === 'removed' ? 'bg-amber-50/50 border-amber-200/50' :
-                          'bg-red-50/50 border-red-200/50'
+                       {participants.map((p) => (
+                        <div key={p.id} className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
+                          p.status === 'active' ? 'bg-stone-950/30 border-stone-800 hover:border-stone-700' :
+                          p.status === 'removed' ? 'bg-amber-950/10 border-amber-900/20 opacity-50' :
+                          'bg-red-950/10 border-red-900/20 opacity-50'
                         }`}>
-                          <div>
-                            <p className="font-medium text-stone-900 text-sm">{p.name}</p>
-                            <p className="text-[10px] text-stone-500">
-                              Joined {new Date(p.created_at).toLocaleString()}
+                          <div className="space-y-1">
+                            <p className="font-medium text-stone-100 text-sm leading-none">{p.name}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-[9px] text-stone-500 font-mono tracking-wider uppercase">
+                                Entry: {new Date(p.created_at).toLocaleDateString()}
+                              </p>
                               {p.status !== 'active' && (
-                                <span className={`ml-2 uppercase font-bold ${p.status === 'removed' ? 'text-amber-600' : 'text-red-600'}`}>
+                                <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono uppercase font-bold border ${p.status === 'removed' ? 'text-amber-600 border-amber-900/40 bg-amber-900/10' : 'text-red-500 border-red-900/40 bg-red-900/10'}`}>
                                   {p.status}
                                 </span>
                               )}
-                            </p>
+                            </div>
                           </div>
                           {p.status === 'active' && (
-                            <div className="flex items-center gap-1">
-                              <Button variant="ghost" size="sm" className="h-7 px-2 text-amber-600 hover:bg-amber-50 text-[10px]" onClick={() => handleRemove(p.id)}>
-                                <UserMinus className="w-3 h-3 mr-0.5" /> Remove
+                            <div className="flex items-center gap-2">
+                              <Button variant="ghost" size="sm" className="h-8 px-3 text-amber-600/70 hover:text-amber-500 hover:bg-amber-500/10 text-[10px] font-mono uppercase" onClick={() => handleRemove(p.id)}>
+                                Remove
                               </Button>
-                              <Button variant="ghost" size="sm" className="h-7 px-2 text-red-600 hover:bg-red-50 text-[10px]" onClick={() => handleKick(p.id)}>
-                                <UserX className="w-3 h-3 mr-0.5" /> Kick
+                              <Button variant="ghost" size="sm" className="h-8 px-3 text-red-600/70 hover:text-red-500 hover:bg-red-500/10 text-[10px] font-mono uppercase" onClick={() => handleKick(p.id)}>
+                                Kick
                               </Button>
                             </div>
                           )}
@@ -423,13 +430,13 @@ export default function EventDetailPage() {
             </Card>
 
             {/* Admin Preview */}
-            <Card className="bg-white border-stone-200">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg font-serif italic">Admin Preview</CardTitle>
+            <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
+              <CardHeader className="flex flex-row items-center justify-between border-b border-stone-800/50 pb-4">
+                <CardTitle className="text-xl font-serif italic text-stone-100 tracking-tight">Negative Preview</CardTitle>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
-                  className="rounded-full text-xs"
+                  className="rounded-full text-[10px] uppercase tracking-[0.2em] font-mono text-stone-500 hover:text-amber-500"
                   onClick={async () => {
                     if (!showPreview && photos.length === 0) {
                       const { data } = await supabase
@@ -438,7 +445,6 @@ export default function EventDetailPage() {
                         .eq('event_id', id)
                         .order('created_at', { ascending: true })
                       
-                      // Map the join to a flatter structure for the component
                       const formattedPhotos = data?.map(p => ({
                         ...p,
                         photographer_name: (p.participants as any)?.name
@@ -449,14 +455,14 @@ export default function EventDetailPage() {
                     setShowPreview(!showPreview)
                   }}
                 >
-                  <Eye className="w-3.5 h-3.5 mr-1" />
-                  {showPreview ? 'Hide' : 'Preview Photos'}
+                  <Eye className="w-3.5 h-3.5 mr-2" />
+                  {showPreview ? 'Close' : 'View Negatives'}
                 </Button>
               </CardHeader>
               {showPreview && (
-                <CardContent>
+                <CardContent className="pt-6">
                   {photos.length === 0 ? (
-                    <p className="text-stone-400 text-sm italic py-4 text-center">No photos captured yet.</p>
+                    <p className="text-stone-600 text-xs italic py-8 text-center font-mono uppercase tracking-widest">No exposures captured yet</p>
                   ) : (
                     <GalleryGrid photos={photos} isRevealing={false} />
                   )}
@@ -468,40 +474,44 @@ export default function EventDetailPage() {
 
           {/* Right: Join QR & Links */}
           <div className="space-y-6">
-            <Card className="bg-white border-stone-900 border-2 overflow-hidden">
-              <CardHeader className="bg-stone-900 text-stone-50 text-center py-4">
-                <CardTitle className="text-xl font-serif italic">Join Vault</CardTitle>
-                <CardDescription className="text-stone-400">Share this with your guests</CardDescription>
+            <Card className="bg-stone-900 border border-stone-800 overflow-hidden shadow-2xl relative">
+              <div className="absolute top-0 left-0 w-full h-1 bg-amber-500" />
+              <CardHeader className="text-center py-6 border-b border-stone-800/50">
+                <CardTitle className="text-2xl font-serif italic text-stone-100">Guest Access</CardTitle>
+                <CardDescription className="text-stone-500 text-xs">Share this QR with your participants</CardDescription>
               </CardHeader>
-              <CardContent className="p-8 flex flex-col items-center space-y-6">
-                <div className="p-4 bg-white border border-stone-200 rounded-xl shadow-inner">
+              <CardContent className="p-8 flex flex-col items-center space-y-8">
+                <div className="p-5 bg-white rounded-2xl shadow-[0_0_50px_rgba(255,255,255,0.05)] border border-white/10 group transition-all hover:scale-105 active:scale-95 cursor-pointer">
                   <QRCodeSVG value={joinUrl} size={180} level="H" />
                 </div>
 
-                <div className="w-full space-y-3">
-                  <div className="bg-stone-50 border border-stone-200 rounded-lg p-3 text-center">
-                    <p className="text-[10px] uppercase tracking-widest text-stone-400 mb-1">Event Code</p>
-                    <p className="text-2xl font-mono font-bold tracking-[0.2em] text-stone-900">{event.code}</p>
+                <div className="w-full space-y-4">
+                  <div className="bg-stone-950/50 border border-stone-800 rounded-2xl p-4 text-center">
+                    <p className="text-[9px] uppercase tracking-[0.3em] text-stone-600 font-mono mb-2">Access Token</p>
+                    <p className="text-3xl font-mono font-bold tracking-[0.2em] text-stone-100 select-all">{event.code}</p>
                   </div>
 
                   <Button
                     onClick={copyJoinLink}
-                    className={`w-full rounded-full transition-all ${copied ? 'bg-green-600' : 'bg-stone-900 hover:bg-stone-800'}`}
+                    className={`w-full h-12 rounded-2xl transition-all font-bold ${copied ? 'bg-green-600 text-white' : 'bg-amber-500 text-stone-950 hover:bg-amber-400'}`}
                   >
                     {copied ? (
-                      <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Copied!</span>
+                      <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Copied Token</span>
                     ) : (
-                      <span className="flex items-center gap-2"><Copy className="w-4 h-4" /> Copy Join Link</span>
+                      <span className="flex items-center gap-2"><Copy className="w-4 h-4" /> Copy Access Link</span>
                     )}
                   </Button>
 
                   <Link href={`/${event.code}`} target="_blank" className="w-full">
-                    <Button variant="outline" className="w-full rounded-full border-stone-300 text-stone-700 mt-2">
+                    <Button variant="outline" className="w-full h-12 rounded-2xl border-stone-800 text-stone-400 hover:bg-stone-800 hover:text-stone-100 transition-all font-medium">
                       <ExternalLink className="w-4 h-4 mr-2" /> Open Guest View
                     </Button>
                   </Link>
                 </div>
               </CardContent>
+              <div className="bg-stone-950/50 p-4 text-center border-t border-stone-800/50">
+                <p className="text-[8px] font-mono text-stone-700 uppercase tracking-widest">Disposable Camera — SnapVault Protocol</p>
+              </div>
             </Card>
           </div>
         </div>
