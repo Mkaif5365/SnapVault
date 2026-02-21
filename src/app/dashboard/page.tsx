@@ -16,6 +16,7 @@ export default async function DashboardPage() {
   const { data: events, error } = await supabase
     .from('events')
     .select('*')
+    .eq('host_id', user.id)
     .order('created_at', { ascending: false })
 
   return (

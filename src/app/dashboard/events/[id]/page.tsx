@@ -31,10 +31,19 @@ export default function EventDetailPage() {
 
   useEffect(() => {
     async function fetchEventData() {
+      // 1. Get current user
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.push('/login')
+        return
+      }
+
+      // 2. Fetch event with host_id filter
       const { data: eventData, error: eventError } = await supabase
         .from('events')
         .select('*')
         .eq('id', id)
+        .eq('host_id', user.id)
         .single()
 
       if (eventError || !eventData) {
