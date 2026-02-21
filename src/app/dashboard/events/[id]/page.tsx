@@ -284,20 +284,22 @@ export default function EventDetailPage() {
                     <p className="text-xs text-stone-500">Prevent new participants from joining</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {event.is_locked ? (
+                    {!!event?.is_locked ? (
                       <Button
+                        key="unlock-btn"
                         variant="outline"
                         size="sm"
-                        className="rounded-full text-xs"
+                        className="rounded-full text-xs font-medium border-stone-200"
                         onClick={handleToggleLock}
                       >
                         <Unlock className="w-3.5 h-3.5 mr-1" /> Unlock Vault
                       </Button>
                     ) : (
                       <Button
+                        key="lock-btn"
                         variant="destructive"
                         size="sm"
-                        className="rounded-full text-xs"
+                        className="rounded-full text-xs font-medium"
                         onClick={handleToggleLock}
                       >
                         <Lock className="w-3.5 h-3.5 mr-1" /> Lock Vault
