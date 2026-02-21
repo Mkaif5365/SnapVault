@@ -279,7 +279,7 @@ export default function EventDetailPage() {
             {/* Host Controls */}
             <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
               <CardHeader className="border-b border-stone-800/50 pb-4">
-                <CardTitle className="text-xl font-serif italic text-stone-100 tracking-tight">Participants</CardTitle>
+                <CardTitle className="text-xl font-serif italic text-stone-100 tracking-tight">Event Control</CardTitle>
               </CardHeader>
               <CardContent className="space-y-0 p-0">
                 {/* Lock/Unlock */}
@@ -380,7 +380,7 @@ export default function EventDetailPage() {
             {/* Participants List */}
             <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
               <CardHeader className="flex flex-row items-center justify-between border-b border-stone-800/50 pb-4">
-                <CardTitle className="text-xl font-serif italic text-stone-100 tracking-tight">Gallery Access</CardTitle>
+                <CardTitle className="text-xl font-serif italic text-stone-100 tracking-tight">Participant List</CardTitle>
                 <Button variant="ghost" size="sm" className="rounded-full text-[10px] uppercase tracking-[0.2em] font-mono text-stone-500 hover:text-amber-500" onClick={() => setShowParticipants(!showParticipants)}>
                   <Users className="w-3.5 h-3.5 mr-2" />
                   {showParticipants ? 'Close' : `View (${participants.length})`}
