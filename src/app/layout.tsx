@@ -16,12 +16,15 @@ export const metadata: Metadata = {
   title: "SnapVault — Disposable Camera for Events",
   description: "A time-locked photo experience for your events. Capture now, reveal later — like developing film.",
   manifest: "/manifest.json",
-  themeColor: "#0c0a09",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "SnapVault",
   },
+};
+
+export const viewport = {
+  themeColor: "#0c0a09",
 };
 
 export default function RootLayout({

@@ -30,12 +30,12 @@ export default async function LandingPage() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
             <Link href="/register">
-              <Button size="lg" className="bg-stone-100 text-stone-900 hover:bg-white rounded-full text-lg px-8 shadow-xl shadow-white/5">
+              <Button size="lg" className="bg-stone-100 text-stone-900 hover:bg-white rounded-full text-lg px-8 shadow-lg hover:shadow-xl hover:shadow-white/10 active:scale-95 transition-all duration-200 cursor-pointer">
                 Start Hosting →
               </Button>
             </Link>
             <Link href="/login">
-              <Button size="lg" variant="outline" className="border-stone-700 text-stone-300 hover:bg-stone-900 rounded-full text-lg px-8">
+              <Button size="lg" variant="outline" className="border-stone-700 text-stone-300 hover:bg-stone-900 hover:border-stone-500 rounded-full text-lg px-8 shadow-sm hover:shadow-md active:scale-95 transition-all duration-200 cursor-pointer">
                 Sign In
               </Button>
             </Link>
@@ -132,7 +132,7 @@ export default async function LandingPage() {
           <h2 className="text-4xl font-serif italic text-stone-100">Ready to Create Your First Vault?</h2>
           <p className="text-stone-500">Free to use. No downloads needed. Works on any device.</p>
           <Link href="/register">
-            <Button size="lg" className="bg-stone-100 text-stone-900 hover:bg-white rounded-full text-lg px-10 shadow-xl shadow-white/5">
+            <Button size="lg" className="bg-stone-100 text-stone-900 hover:bg-white rounded-full text-lg px-10 shadow-lg hover:shadow-xl hover:shadow-white/10 active:scale-95 transition-all duration-200 cursor-pointer">
               Get Started Free →
             </Button>
           </Link>

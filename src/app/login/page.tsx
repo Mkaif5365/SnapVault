@@ -96,8 +96,8 @@ export default function LoginPage() {
                 )}
               />
               {error && <p className="text-sm text-red-500 text-center">{error}</p>}
-              <Button type="submit" className="w-full bg-stone-900 text-stone-50 hover:bg-stone-800" disabled={loading}>
-                {loading ? "Developing..." : "Login"}
+              <Button type="submit" className="w-full bg-stone-900 text-stone-50 hover:bg-stone-800 shadow-sm hover:shadow-md active:scale-[0.98] transition-all cursor-pointer" disabled={loading}>
+                {loading ? "Logging in..." : "Login"}
               </Button>
             </form>
           </Form>
