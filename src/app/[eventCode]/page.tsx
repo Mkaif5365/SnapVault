@@ -339,8 +339,8 @@ export default function GuestEventPage() {
 
         <CardHeader className="pt-10 pb-6 text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-full bg-stone-900 flex items-center justify-center text-stone-50 shadow-lg">
-              <Camera className="w-8 h-8" />
+            <div className="w-16 h-16 rounded-full bg-stone-900 flex items-center justify-center text-stone-50 shadow-lg overflow-hidden">
+              <img src="/logo.png" alt="SnapVault" className="w-12 h-12 object-contain" />
             </div>
           </div>
           <CardTitle className="text-4xl font-serif italic text-stone-900">SnapVault</CardTitle>

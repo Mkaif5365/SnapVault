@@ -20,6 +20,17 @@ export default async function LandingPage() {
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-900/15 rounded-full blur-[120px] pointer-events-none" />
         
         <div className="relative z-10 space-y-8 max-w-3xl">
+          <div className="flex justify-center mb-4">
+            <div className="relative w-32 h-32 md:w-48 md:h-48 animate-in fade-in zoom-in duration-1000">
+              {/* Logo Glow */}
+              <div className="absolute inset-0 bg-amber-500/20 rounded-full blur-2xl animate-pulse" />
+              <img 
+                src="/logo.png" 
+                alt="SnapVault Logo" 
+                className="relative z-10 w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+              />
+            </div>
+          </div>
           <p className="text-[10px] uppercase tracking-[0.5em] text-amber-500/70 font-mono">Disposable Camera for Events</p>
           <h1 className="text-7xl md:text-8xl font-serif italic text-stone-100 tracking-tight leading-[0.9]">
             SnapVault
