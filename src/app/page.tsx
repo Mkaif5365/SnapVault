@@ -123,9 +123,9 @@ export default async function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
               { icon: Camera, title: "Vintage Camera Filters", desc: "Grainy B&W, Vintage Sepia, Polaroid Soft, and '98 Date Stamp filters with real-time preview." },
-              { icon: Timer, title: "Time-Lock Vault", desc: "Photos stay hidden until your chosen reveal time. Build anticipation with a Dark Room countdown." },
+              { icon: Timer, title: "Time-Lock Vault", desc: "Photos stay hidden until your chosen reveal time. Build anticipation with a reveal countdown." },
               { icon: Lock, title: "Host Controls", desc: "Lock events, kick participants, adjust reveal times, and manage everything from your dashboard." },
-              { icon: Download, title: "One-Click Download", desc: "Download all event photos as a ZIP file. Named sequentially—just like a real roll of film." },
+              { icon: Download, title: "One-Click Download", desc: "Download all event photos as a ZIP file. Named sequentially—just like a real camera roll." },
             ].map((feature, i) => (
               <div key={i} className="bg-stone-900/50 border border-stone-800 rounded-2xl p-8 space-y-4 hover:border-stone-700 transition-colors">
                 <feature.icon className="w-6 h-6 text-amber-500" />

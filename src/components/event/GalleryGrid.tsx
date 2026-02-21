@@ -68,9 +68,8 @@ export default function GalleryGrid({ photos, isRevealing, showPhotographer = tr
                 {photo.photographer_name}
               </div>
             )}
-            {/* Frame Number */}
             <div className="absolute bottom-1 right-1 bg-black/50 backdrop-blur-sm text-[8px] text-stone-300 font-mono px-1.5 py-0.5 rounded">
-              #{(index + 1).toString().padStart(2, '0')}
+              Image #{(index + 1).toString().padStart(2, '0')}
             </div>
           </button>
         ))}
@@ -111,7 +110,7 @@ export default function GalleryGrid({ photos, isRevealing, showPhotographer = tr
               className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
             />
             <p className="text-center text-stone-500 text-xs font-mono mt-3">
-              Frame #{(lightboxIndex + 1).toString().padStart(2, '0')} of {photos.length}
+              Image #{(lightboxIndex + 1).toString().padStart(2, '0')} of {photos.length}
             </p>
           </div>
         </div>

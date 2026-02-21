@@ -81,7 +81,7 @@ export default async function DashboardPage() {
                           <Camera className="w-3.5 h-3.5 text-stone-500" />
                         </div>
                         <div>
-                          <p className="text-[10px] uppercase tracking-wider text-stone-600 font-mono">Film Roll</p>
+                          <p className="text-[10px] uppercase tracking-wider text-stone-600 font-mono">Photo Limit</p>
                           <p className="text-stone-300 font-medium">{event.photo_limit} Maximum Photos</p>
                         </div>
                       </div>
@@ -103,7 +103,7 @@ export default async function DashboardPage() {
             </div>
             <div className="space-y-2">
               <h3 className="text-2xl font-serif italic text-stone-100 tracking-tight">No Active Vaults</h3>
-              <p className="text-stone-500 max-w-sm mx-auto text-sm font-light">Your events will appear here once you create your first film roll vault.</p>
+              <p className="text-stone-500 max-w-sm mx-auto text-sm font-light">Your events will appear here once you create your first event vault.</p>
             </div>
             <Link href="/dashboard/events/new">
               <Button className="bg-amber-500 text-stone-950 hover:bg-amber-400 rounded-full px-10 font-medium shadow-lg shadow-amber-500/10">

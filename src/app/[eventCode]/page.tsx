@@ -195,7 +195,7 @@ export default function GuestEventPage() {
             {uploading && (
               <div className="bg-stone-900 text-stone-50 p-4 rounded-xl space-y-2 animate-in fade-in zoom-in duration-300">
                 <div className="flex justify-between text-[10px] uppercase tracking-widest font-mono">
-                  <span>Uploading Snaps...</span>
+                  <span>Uploading Images...</span>
                   <span>{uploadProgress.current} / {uploadProgress.total}</span>
                 </div>
                 <div className="w-full bg-stone-800 h-1.5 rounded-full overflow-hidden">
@@ -234,7 +234,7 @@ export default function GuestEventPage() {
                 >
                   <div className="flex items-center gap-3">
                     <Loader2 className={`w-5 h-5 ${uploading ? 'animate-spin' : ''}`} />
-                    <span className="text-lg">{uploading ? 'Uploading...' : 'Upload Photos'}</span>
+                    <span className="text-lg">{uploading ? 'Uploading...' : 'Upload Images'}</span>
                   </div>
                   <span className="text-[10px] uppercase tracking-widest text-stone-400">Max 20MB</span>
                 </Button>
@@ -254,7 +254,7 @@ export default function GuestEventPage() {
 
             <div className="pt-4 text-center">
               <p className="text-[10px] text-stone-300 uppercase tracking-[0.2em]">
-                {photosCount} / {event.photo_limit} SNAPS CAPTURED
+                {photosCount} / {event.photo_limit} IMAGES CAPTURED
               </p>
             </div>
           </CardContent>
@@ -382,7 +382,7 @@ export default function GuestEventPage() {
           </form>
 
           <p className="mt-8 text-center text-[10px] text-stone-300 uppercase tracking-[0.2em]">
-            Disposable Camera Experience
+            SnapVault Premium
           </p>
         </CardContent>
       </Card>

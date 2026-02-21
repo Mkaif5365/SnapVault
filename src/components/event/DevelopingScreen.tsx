@@ -73,9 +73,9 @@ export default function DevelopingScreen({ eventName, revealTime, photosCount, p
 
         {/* Title */}
         <div className="space-y-3">
-          <p className="text-[10px] uppercase tracking-[0.4em] text-red-500/60 font-mono">Do Not Disturb</p>
+          <p className="text-[10px] uppercase tracking-[0.4em] text-red-500/60 font-mono">Vault Status</p>
           <h1 className="text-4xl font-serif italic text-stone-200">{eventName}</h1>
-          <p className="text-stone-600 text-sm">Your photos are still developing...</p>
+          <p className="text-stone-600 text-sm">Your images are currently hidden...</p>
         </div>
 
         {/* Countdown Timer */}
@@ -103,7 +103,7 @@ export default function DevelopingScreen({ eventName, revealTime, photosCount, p
         {/* Live Roll Progress */}
         <div className="bg-stone-900/30 border border-stone-800/50 rounded-2xl p-5 space-y-3">
           <div className="flex items-center justify-between text-xs font-mono">
-            <span className="text-stone-500 uppercase tracking-wider">Roll Progress</span>
+            <span className="text-stone-500 uppercase tracking-wider">Vault Progress</span>
             <span className="text-red-500/80">{photosCount} / {photoLimit}</span>
           </div>
           <div className="w-full bg-stone-900 h-2 rounded-full overflow-hidden border border-stone-800">
@@ -114,10 +114,10 @@ export default function DevelopingScreen({ eventName, revealTime, photosCount, p
           </div>
           <p className="text-stone-700 text-[10px] italic text-center">
             {photosCount === 0 
-              ? "No photos captured yet." 
+              ? "No images captured yet." 
               : photosCount >= photoLimit 
-                ? "Roll is full!" 
-                : `${photoLimit - photosCount} frames remaining.`}
+                ? "Vault is full!" 
+                : `${photoLimit - photosCount} slots remaining.`}
           </p>
         </div>
       </div>
@@ -125,7 +125,7 @@ export default function DevelopingScreen({ eventName, revealTime, photosCount, p
       {/* Footer */}
       <footer className="absolute bottom-6 text-center">
         <p className="text-[9px] text-stone-800 tracking-[0.4em] uppercase font-mono">
-          SnapVault // Dark Room
+          SnapVault // Premium
         </p>
       </footer>
     </div>

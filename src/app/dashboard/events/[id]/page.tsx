@@ -222,7 +222,7 @@ export default function EventDetailPage() {
                   onClick={handleDelete}
                 >
                   <Trash2 className="w-3.5 h-3.5 mr-2" />
-                  Discard Roll
+                  Delete Event
                 </Button>
               </div>
               <p className="text-stone-400 text-lg leading-relaxed font-light max-w-2xl">{event.description || "No description provided."}</p>
@@ -247,7 +247,7 @@ export default function EventDetailPage() {
               <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
                 <CardContent className="pt-6 pb-5 flex flex-col items-center">
                   <Camera className="w-4 h-4 text-stone-600 mb-3" />
-                  <p className="text-[9px] uppercase tracking-[0.2em] text-stone-500 font-mono mb-1">Exposure</p>
+                  <p className="text-[9px] uppercase tracking-[0.2em] text-stone-500 font-mono mb-1">Images</p>
                   <p className="font-medium text-stone-100 text-sm">{photosCount} / {event.photo_limit}</p>
                 </CardContent>
               </Card>
@@ -264,7 +264,7 @@ export default function EventDetailPage() {
             <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl overflow-hidden">
               <CardContent className="pt-6 pb-6 space-y-4">
                 <div className="flex justify-between items-center text-[10px] uppercase font-mono tracking-[0.2em]">
-                  <span className="text-stone-500">フィルム使用量 / Roll Utilization</span>
+                  <span className="text-stone-500">Roll Utilization</span>
                   <span className="text-amber-500">{event.photo_limit > 0 ? Math.round((photosCount / event.photo_limit) * 100) : 0}%</span>
                 </div>
                 <div className="w-full bg-stone-950 h-3 rounded-full overflow-hidden border border-stone-900 inner-shadow">
@@ -279,7 +279,7 @@ export default function EventDetailPage() {
             {/* Host Controls */}
             <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
               <CardHeader className="border-b border-stone-800/50 pb-4">
-                <CardTitle className="text-xl font-serif italic text-stone-100 tracking-tight">Darkroom Controls</CardTitle>
+                <CardTitle className="text-xl font-serif italic text-stone-100 tracking-tight">Participants</CardTitle>
               </CardHeader>
               <CardContent className="space-y-0 p-0">
                 {/* Lock/Unlock */}
@@ -317,7 +317,7 @@ export default function EventDetailPage() {
                 {/* Reveal Time */}
                 <div className="p-6 space-y-4 hover:bg-stone-800/20 transition-colors">
                   <div>
-                    <p className="text-sm font-medium text-stone-100">Development Timer</p>
+                    <p className="text-sm font-medium text-stone-100">Reveal Timer</p>
                     <p className="text-xs text-stone-500 mt-0.5">Adjust when photos are automatically revealed</p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -338,8 +338,8 @@ export default function EventDetailPage() {
                 {/* Promocode */}
                 <div className="p-6 space-y-4 hover:bg-stone-800/20 transition-colors">
                   <div>
-                    <p className="text-sm font-medium text-stone-100">Film Expansion</p>
-                    <p className="text-xs text-stone-500 mt-0.5">Use codes to increase photo capacity</p>
+                    <p className="text-sm font-medium text-stone-100">Photo Capacity</p>
+                    <p className="text-xs text-stone-500 mt-0.5">Use codes to increase photo limit</p>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
                     <input
@@ -366,7 +366,7 @@ export default function EventDetailPage() {
                 <div className="flex items-center justify-between p-6 hover:bg-stone-800/20 transition-colors">
                   <div>
                     <p className="text-sm font-medium text-stone-100">Batch Export</p>
-                    <p className="text-xs text-stone-500 mt-0.5">Export all exposures as a ZIP archive</p>
+                    <p className="text-xs text-stone-500 mt-0.5">Export all images as a ZIP archive</p>
                   </div>
                   <a href={`/api/events/${id}/download`} download>
                     <Button variant="outline" size="sm" className="rounded-full text-[10px] uppercase tracking-wider font-mono border-stone-700 text-stone-400 hover:bg-stone-800 hover:text-stone-100" disabled={photosCount === 0}>
@@ -456,13 +456,13 @@ export default function EventDetailPage() {
                   }}
                 >
                   <Eye className="w-3.5 h-3.5 mr-2" />
-                  {showPreview ? 'Close' : 'View Negatives'}
+                  {showPreview ? 'Close' : 'View Images'}
                 </Button>
               </CardHeader>
               {showPreview && (
                 <CardContent className="pt-6">
                   {photos.length === 0 ? (
-                    <p className="text-stone-600 text-xs italic py-8 text-center font-mono uppercase tracking-widest">No exposures captured yet</p>
+                    <p className="text-stone-600 text-xs italic py-8 text-center font-mono uppercase tracking-widest">No images captured yet</p>
                   ) : (
                     <GalleryGrid photos={photos} isRevealing={false} />
                   )}
@@ -510,7 +510,7 @@ export default function EventDetailPage() {
                 </div>
               </CardContent>
               <div className="bg-stone-950/50 p-4 text-center border-t border-stone-800/50">
-                <p className="text-[8px] font-mono text-stone-700 uppercase tracking-widest">Disposable Camera — SnapVault Protocol</p>
+                <p className="text-[8px] font-mono text-stone-700 uppercase tracking-widest">SnapVault Premium</p>
               </div>
             </Card>
           </div>

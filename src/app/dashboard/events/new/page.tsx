@@ -92,21 +92,25 @@ export default function NewEventPage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-100 p-4 md:p-8 flex flex-col items-center">
-      <div className="w-full max-w-2xl space-y-6">
-        <Link href="/dashboard" className="inline-flex items-center text-stone-500 hover:text-stone-900 transition-colors gap-2 text-sm font-medium">
-          <ArrowLeft className="w-4 h-4" />
+    <div className="min-h-screen bg-stone-950 p-4 md:p-8 flex flex-col items-center antialiased relative overflow-hidden">
+      {/* Ambient Glow */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-900/5 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="w-full max-w-2xl space-y-6 relative z-10">
+        <Link href="/dashboard" className="inline-flex items-center text-stone-500 hover:text-amber-500 transition-all gap-2 text-[10px] uppercase tracking-[0.2em] font-mono group">
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
           Back to Dashboard
         </Link>
 
-        <Card className="bg-white border-stone-200 shadow-sm">
-          <CardHeader className="border-b border-stone-50">
-            <CardTitle className="text-3xl font-serif italic text-stone-900">Create New Event Vault</CardTitle>
-            <CardDescription className="text-stone-500">
-              Set the rules for your disposable camera experience.
+        <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl shadow-2xl overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-amber-500" />
+          <CardHeader className="pt-10 pb-6">
+            <CardTitle className="text-3xl font-serif italic text-stone-100">Create New Event Vault</CardTitle>
+            <CardDescription className="text-stone-500 font-light">
+              Configure your vault settings and reveal timer.
             </CardDescription>
           </CardHeader>
-          <CardContent className="pt-6">
+          <CardContent className="pb-10">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
@@ -114,9 +118,9 @@ export default function NewEventPage() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-stone-700">Event Name</FormLabel>
+                      <FormLabel className="text-[10px] uppercase tracking-[0.2em] text-stone-500 font-mono ml-1">Event Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Smith Wedding, Summer Trip" {...field} className="bg-white border-stone-300 focus-visible:ring-stone-400" />
+                        <Input placeholder="e.g. Smith Wedding, Summer Trip" {...field} className="h-12 bg-stone-950/50 border-stone-800 text-stone-100 placeholder:text-stone-700 focus-visible:ring-amber-500/30 rounded-xl" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -128,9 +132,9 @@ export default function NewEventPage() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-stone-700">Description (Optional)</FormLabel>
+                      <FormLabel className="text-[10px] uppercase tracking-[0.2em] text-stone-500 font-mono ml-1">Description (Optional)</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Share details about the event..." {...field} className="bg-white border-stone-300 focus-visible:ring-stone-400 min-h-[100px]" />
+                        <Textarea placeholder="Share details about the event..." {...field} className="bg-stone-950/50 border-stone-800 text-stone-100 placeholder:text-stone-700 focus-visible:ring-amber-500/30 rounded-xl min-h-[100px]" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -143,11 +147,11 @@ export default function NewEventPage() {
                     name="reveal_time"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-stone-700">Reveal Gallery At</FormLabel>
+                        <FormLabel className="text-[10px] uppercase tracking-[0.2em] text-stone-500 font-mono ml-1">Reveal Images At</FormLabel>
                         <FormControl>
-                          <Input type="datetime-local" {...field} className="bg-white border-stone-300 focus-visible:ring-stone-400" />
+                          <Input type="datetime-local" {...field} className="h-12 bg-stone-950/50 border-stone-800 text-stone-100 font-mono focus-visible:ring-amber-500/30 rounded-xl" />
                         </FormControl>
-                        <FormDescription className="text-[11px]">When photos will be developed for everyone.</FormDescription>
+                        <FormDescription className="text-[10px] font-mono text-stone-600 uppercase tracking-tight">When images will be revealed to guests.</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -158,11 +162,11 @@ export default function NewEventPage() {
                     name="photo_limit"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-stone-700">Max Photos (Total)</FormLabel>
+                        <FormLabel className="text-[10px] uppercase tracking-[0.2em] text-stone-500 font-mono ml-1">Max Images (Total)</FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} className="bg-white border-stone-300 focus-visible:ring-stone-400" />
+                          <Input type="number" {...field} className="h-12 bg-stone-950/50 border-stone-800 text-stone-100 focus-visible:ring-amber-500/30 rounded-xl" />
                         </FormControl>
-                      <FormDescription className="text-[11px]">Max 100 photos. Use promo code to increase up to 1000.</FormDescription>
+                      <FormDescription className="text-[10px] font-mono text-stone-600 uppercase tracking-tight">Standard limit is 100. Use code to boost.</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -174,19 +178,19 @@ export default function NewEventPage() {
                   name="promocode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-stone-700">Promo Code</FormLabel>
+                      <FormLabel className="text-[10px] uppercase tracking-[0.2em] text-stone-500 font-mono ml-1">Promo Code</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter code to boost limits" {...field} className="bg-white border-stone-300 focus-visible:ring-stone-400 font-mono uppercase" />
+                        <Input placeholder="Enter code to boost limit" {...field} className="h-12 bg-stone-950/50 border-stone-800 text-stone-100 placeholder:text-stone-700 focus-visible:ring-amber-500/30 rounded-xl font-mono uppercase tracking-widest" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <Button type="submit" className="w-full bg-stone-900 text-stone-50 hover:bg-stone-800 h-12 text-lg rounded-full" disabled={loading}>
+                <Button type="submit" className="w-full bg-amber-500 text-stone-950 hover:bg-amber-400 h-14 text-lg rounded-full font-bold shadow-lg shadow-amber-500/10 active:scale-95 transition-all" disabled={loading}>
                   {loading ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                       Initializing Vault...
                     </>
                   ) : "Create Event Vault"}
