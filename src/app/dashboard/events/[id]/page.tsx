@@ -283,14 +283,13 @@ export default function EventDetailPage() {
                     <p className="text-sm font-medium text-stone-900">Event Lock</p>
                     <p className="text-xs text-stone-500">Prevent new participants from joining</p>
                   </div>
-                  <div className="bg-amber-100 p-2 rounded">
-                    <p className="text-[8px] text-amber-800 mb-1">Debug: {event?.is_locked ? 'Locked' : 'Unlocked'}</p>
+                  <div className="flex items-center gap-2">
                     {event?.is_locked ? (
                       <Button
                         key="unlock-btn"
                         variant="outline"
                         size="sm"
-                        className="rounded-full text-xs font-medium border-stone-200 bg-white"
+                        className="rounded-full text-xs font-medium border-stone-300 bg-white text-stone-900 hover:bg-stone-50"
                         onClick={handleToggleLock}
                       >
                         <Unlock className="w-3.5 h-3.5 mr-1" /> Unlock Vault
@@ -300,7 +299,7 @@ export default function EventDetailPage() {
                         key="lock-btn"
                         variant="destructive"
                         size="sm"
-                        className="rounded-full text-xs font-medium"
+                        className="rounded-full text-xs font-medium bg-red-600 hover:bg-red-700 text-white shadow-sm"
                         onClick={handleToggleLock}
                       >
                         <Lock className="w-3.5 h-3.5 mr-1" /> Lock Vault
