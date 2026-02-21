@@ -18,6 +18,7 @@ import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { getURL } from "@/lib/utils/url"
 
 const formSchema = z.object({
   email: z.string().email({
@@ -69,7 +70,7 @@ export default function RegisterPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${getURL()}auth/callback`,
       },
     })
     if (error) {
