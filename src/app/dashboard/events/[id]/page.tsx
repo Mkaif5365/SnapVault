@@ -432,7 +432,7 @@ export default function EventDetailPage() {
             {/* Admin Preview */}
             <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
               <CardHeader className="flex flex-row items-center justify-between border-b border-stone-800/50 pb-4">
-                <CardTitle className="text-xl font-serif italic text-stone-100 tracking-tight">Negative Preview</CardTitle>
+                <CardTitle className="text-xl font-serif italic text-stone-100 tracking-tight">Image Preview</CardTitle>
                 <Button
                   variant="ghost"
                   size="sm"

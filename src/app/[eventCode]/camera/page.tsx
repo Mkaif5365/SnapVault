@@ -182,7 +182,7 @@ export default function CameraPage() {
           <span className="text-[10px] uppercase tracking-widest font-medium">Back to Hub</span>
         </button>
         <div className="flex flex-col items-center">
-          <span className="text-[10px] uppercase tracking-widest text-stone-500 mb-1">Vault Snapshot</span>
+          <span className="text-[10px] uppercase tracking-widest text-stone-500 mb-1">Event Vault</span>
           <span className="font-serif italic text-stone-100">#{eventCode}</span>
         </div>
         <div className="text-right">
@@ -244,9 +244,8 @@ export default function CameraPage() {
             </div>
           )}
 
-          {/* Frame Counter Overlay */}
           <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-[10px] font-mono tracking-tighter">
-            ROLL: <span className="text-amber-500">{photosCount.toString().padStart(2, '0')}</span> / {event.photo_limit}
+            CAPACITY: <span className="text-amber-500">{photosCount.toString().padStart(2, '0')}</span> / {event.photo_limit}
           </div>
         </div>
 
@@ -285,9 +284,8 @@ export default function CameraPage() {
         </div>
       </div>
 
-      {/* Filter Selector */}
       <div className="w-full max-w-md bg-stone-900/50 backdrop-blur-md border border-stone-800 p-4 rounded-3xl flex flex-col gap-3">
-        <p className="text-[10px] uppercase tracking-[0.3em] text-stone-500 text-center">Film Selection</p>
+        <p className="text-[10px] uppercase tracking-[0.3em] text-stone-500 text-center">Image Filters</p>
         <div className="flex items-center justify-between gap-2 overflow-x-auto pb-2 px-2 scrollbar-hide">
           {FILTERS.map((f) => (
             <button
@@ -308,10 +306,9 @@ export default function CameraPage() {
       {/* Hidden Canvas for processing */}
       <canvas ref={canvasRef} className="hidden" />
 
-      {/* Footer / Branding */}
       <footer className="w-full text-center pb-4">
         <p className="text-[9px] text-stone-700 tracking-[0.4em] uppercase font-mono">
-          DIGITAL DISPOSABLE // V26-03
+          SnapVault Premium // V26-03
         </p>
       </footer>
     </div>
