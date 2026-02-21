@@ -7,14 +7,16 @@ interface Photo {
   id: string
   telegram_file_id: string
   created_at: string
+  photographer_name?: string
 }
 
 interface GalleryGridProps {
   photos: Photo[]
   isRevealing: boolean
+  showPhotographer?: boolean
 }
 
-export default function GalleryGrid({ photos, isRevealing }: GalleryGridProps) {
+export default function GalleryGrid({ photos, isRevealing, showPhotographer = true }: GalleryGridProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
   const openLightbox = (index: number) => setLightboxIndex(index)
@@ -59,6 +61,13 @@ export default function GalleryGrid({ photos, isRevealing }: GalleryGridProps) {
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"
             />
+            
+            {/* Photographer Name Overlay */}
+            {showPhotographer && photo.photographer_name && (
+              <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-md text-[7px] text-stone-100 font-medium px-1.5 py-0.5 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                {photo.photographer_name}
+              </div>
+            )}
             {/* Frame Number */}
             <div className="absolute bottom-1 right-1 bg-black/50 backdrop-blur-sm text-[8px] text-stone-300 font-mono px-1.5 py-0.5 rounded">
               #{(index + 1).toString().padStart(2, '0')}

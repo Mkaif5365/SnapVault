@@ -174,8 +174,12 @@ export default function CameraPage() {
       </svg>
       {/* Header / StatusBar */}
       <div className="w-full max-w-md flex items-center justify-between px-2 pt-4">
-        <button onClick={() => router.back()} className="p-2 text-stone-400 hover:text-stone-100 transition-colors">
-          <ArrowLeft className="w-6 h-6" />
+        <button 
+          onClick={() => router.push(`/${eventCode}`)} 
+          className="flex items-center gap-1.5 p-2 text-stone-400 hover:text-stone-100 transition-colors group"
+        >
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          <span className="text-[10px] uppercase tracking-widest font-medium">Back to Hub</span>
         </button>
         <div className="flex flex-col items-center">
           <span className="text-[10px] uppercase tracking-widest text-stone-500 mb-1">Vault Snapshot</span>

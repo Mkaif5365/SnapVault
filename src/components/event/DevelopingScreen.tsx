@@ -1,16 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Camera } from "lucide-react"
+import { Camera, ArrowLeft } from "lucide-react"
 
 interface DevelopingScreenProps {
   eventName: string
   revealTime: string
   photosCount: number
   photoLimit: number
+  onBack?: () => void
 }
 
-export default function DevelopingScreen({ eventName, revealTime, photosCount, photoLimit }: DevelopingScreenProps) {
+export default function DevelopingScreen({ eventName, revealTime, photosCount, photoLimit, onBack }: DevelopingScreenProps) {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
   const [isExpired, setIsExpired] = useState(false)
 
@@ -43,6 +44,17 @@ export default function DevelopingScreen({ eventName, revealTime, photosCount, p
 
   return (
     <div className="min-h-screen bg-stone-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      {/* Back to Hub Button */}
+      {onBack && (
+        <button 
+          onClick={onBack}
+          className="absolute top-8 left-8 flex items-center gap-1.5 p-2 text-stone-600 hover:text-stone-300 transition-colors group z-[100]"
+        >
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          <span className="text-[10px] uppercase tracking-widest font-medium">Back to Hub</span>
+        </button>
+      )}
+
       {/* Pulsating Red Light */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-red-900/20 animate-pulse blur-3xl pointer-events-none" />
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full bg-red-800/30 animate-pulse blur-xl pointer-events-none" style={{ animationDelay: '0.5s' }} />

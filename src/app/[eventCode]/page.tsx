@@ -6,11 +6,11 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Camera, Loader2, ArrowRight } from "lucide-react"
+import { Camera, Loader2, ArrowRight, Image as ImageIcon } from "lucide-react"
 import DevelopingScreen from "@/components/event/DevelopingScreen"
 import GalleryGrid from "@/components/event/GalleryGrid"
 
-type PageState = 'loading' | 'join' | 'developing' | 'revealed' | 'locked'
+type PageState = 'loading' | 'join' | 'hub' | 'developing' | 'revealed' | 'locked'
 
 export default function GuestEventPage() {
   const { eventCode } = useParams()
@@ -22,6 +22,9 @@ export default function GuestEventPage() {
   const [name, setName] = useState("")
   const [joining, setJoining] = useState(false)
   const [isRevealing, setIsRevealing] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 })
+  const [participant, setParticipant] = useState<any>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -73,8 +76,21 @@ export default function GuestEventPage() {
         // Check if user already joined (has name saved for this event)
         const participantId = localStorage.getItem(`participant_${data.id}`)
         if (participantId) {
-          setPageState('developing')
-        } else if (data.is_locked) {
+          // Fetch participant details to be sure
+          const { data: pData } = await supabase
+            .from('participants')
+            .select('*')
+            .eq('id', participantId)
+            .single()
+          
+          if (pData) {
+            setParticipant(pData)
+            setPageState('hub')
+            return
+          }
+        }
+        
+        if (data.is_locked) {
           setPageState('locked')
         } else {
           setPageState('join')
@@ -92,7 +108,7 @@ export default function GuestEventPage() {
     setJoining(true)
     localStorage.setItem("snapvault_name", name.trim())
 
-    const { data: participant, error } = await supabase
+    const { data: pData, error } = await supabase
       .from('participants')
       .insert({
         event_id: event.id,
@@ -107,9 +123,144 @@ export default function GuestEventPage() {
       alert("Failed to join event.")
       setJoining(false)
     } else {
-      localStorage.setItem(`participant_${event.id}`, participant.id)
-      router.push(`/${eventCode}/camera`)
+      localStorage.setItem(`participant_${event.id}`, pData.id)
+      setParticipant(pData)
+      setPageState('hub')
     }
+  }
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    // 1. Check event limit
+    if (photosCount >= event.photo_limit) {
+      alert("This vault is full! No more photos can be added.")
+      return
+    }
+
+    setUploading(true)
+    setUploadProgress({ current: 0, total: files.length })
+
+    const { uploadPhotoToTelegram } = await import("@/lib/telegram/actions")
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+      
+      // 2. Size limit: 20MB
+      if (file.size > 20 * 1024 * 1024) {
+        alert(`File "${file.name}" is too large (max 20MB). Skipping.`)
+        continue
+      }
+
+      setUploadProgress(prev => ({ ...prev, current: i + 1 }))
+
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("eventId", event.id)
+      formData.append("participantId", participant.id)
+
+      const result = await uploadPhotoToTelegram(formData)
+      if (result.error) {
+        console.error(`Failed to upload ${file.name}:`, result.error)
+      } else {
+        setPhotosCount(prev => prev + 1)
+      }
+    }
+
+    setUploading(false)
+    alert("Upload completed!")
+  }
+
+  // HUB STATE
+  if (pageState === 'hub' && event && participant) {
+    return (
+      <div className="min-h-screen bg-stone-900 flex flex-col items-center justify-center p-6 antialiased">
+        <Card className="w-full max-w-md bg-stone-50 border-none shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-4 bg-black flex justify-around items-center px-4">
+            {[...Array(10)].map((_, i) => (
+              <div key={i} className="w-1.5 h-1.5 bg-stone-800 rounded-sm" />
+            ))}
+          </div>
+
+          <CardHeader className="pt-10 pb-6 text-center">
+            <p className="text-[10px] uppercase tracking-[0.4em] text-stone-400 font-mono mb-2">Guest Hub</p>
+            <CardTitle className="text-3xl font-serif italic text-stone-900">{event.name}</CardTitle>
+            <CardDescription className="text-stone-500 mt-1">
+              Welcome, <span className="text-stone-900 font-semibold">{participant.name}</span>
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="space-y-4 pb-10">
+            {uploading && (
+              <div className="bg-stone-900 text-stone-50 p-4 rounded-xl space-y-2 animate-in fade-in zoom-in duration-300">
+                <div className="flex justify-between text-[10px] uppercase tracking-widest font-mono">
+                  <span>Uploading Snaps...</span>
+                  <span>{uploadProgress.current} / {uploadProgress.total}</span>
+                </div>
+                <div className="w-full bg-stone-800 h-1.5 rounded-full overflow-hidden">
+                  <div 
+                    className="bg-amber-500 h-full transition-all duration-300"
+                    style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-3">
+              <Button 
+                onClick={() => router.push(`/${eventCode}/camera`)}
+                className="h-16 bg-stone-900 text-stone-50 hover:bg-stone-800 rounded-xl flex items-center justify-between px-6 group"
+              >
+                <div className="flex items-center gap-3">
+                  <Camera className="w-5 h-5" />
+                  <span className="text-lg">Open Camera</span>
+                </div>
+                <ArrowRight className="w-5 h-5 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+              </Button>
+
+              <div className="relative">
+                <input 
+                  type="file" 
+                  multiple 
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  disabled={uploading}
+                  className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                />
+                <Button 
+                  variant="outline"
+                  className="w-full h-16 border-2 border-stone-200 text-stone-700 hover:bg-stone-50 rounded-xl flex items-center justify-between px-6"
+                >
+                  <div className="flex items-center gap-3">
+                    <Loader2 className={`w-5 h-5 ${uploading ? 'animate-spin' : ''}`} />
+                    <span className="text-lg">{uploading ? 'Uploading...' : 'Upload Photos'}</span>
+                  </div>
+                  <span className="text-[10px] uppercase tracking-widest text-stone-400">Max 20MB</span>
+                </Button>
+              </div>
+
+              <Button 
+                variant="ghost"
+                onClick={() => setPageState('developing')}
+                className="h-16 text-stone-500 hover:text-stone-900 hover:bg-stone-100 rounded-xl flex items-center justify-between px-6"
+              >
+                <div className="flex items-center gap-3">
+                  <ImageIcon className="w-5 h-5" />
+                  <span className="text-lg">View Gallery</span>
+                </div>
+              </Button>
+            </div>
+
+            <div className="pt-4 text-center">
+              <p className="text-[10px] text-stone-300 uppercase tracking-[0.2em]">
+                {photosCount} / {event.photo_limit} SNAPS CAPTURED
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   // LOADING STATE
@@ -147,6 +298,7 @@ export default function GuestEventPage() {
         revealTime={event.reveal_time}
         photosCount={photosCount}
         photoLimit={event.photo_limit}
+        onBack={() => setPageState('hub')}
       />
     )
   }

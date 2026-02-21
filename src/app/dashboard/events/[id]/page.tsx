@@ -283,14 +283,26 @@ export default function EventDetailPage() {
                     <p className="text-sm font-medium text-stone-900">Event Lock</p>
                     <p className="text-xs text-stone-500">Prevent new participants from joining</p>
                   </div>
-                  <Button
-                    variant={event.is_locked ? "destructive" : "outline"}
-                    size="sm"
-                    className="rounded-full text-xs"
-                    onClick={handleToggleLock}
-                  >
-                    {event.is_locked ? <><Unlock className="w-3.5 h-3.5 mr-1" /> Unlock</> : <><Lock className="w-3.5 h-3.5 mr-1" /> Lock Event</>}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant={event.is_locked ? "secondary" : "destructive"}
+                      size="sm"
+                      className={`rounded-full text-xs ${event.is_locked ? 'opacity-50 grayscale' : ''}`}
+                      disabled={event.is_locked}
+                      onClick={handleToggleLock}
+                    >
+                      <Lock className="w-3.5 h-3.5 mr-1" /> Lock Vault
+                    </Button>
+                    <Button
+                      variant={!event.is_locked ? "secondary" : "outline"}
+                      size="sm"
+                      className={`rounded-full text-xs ${!event.is_locked ? 'opacity-50 grayscale' : ''}`}
+                      disabled={!event.is_locked}
+                      onClick={handleToggleLock}
+                    >
+                      <Unlock className="w-3.5 h-3.5 mr-1" /> Unlock Vault
+                    </Button>
+                  </div>
                 </div>
 
                 <hr className="border-stone-100" />
@@ -419,10 +431,17 @@ export default function EventDetailPage() {
                     if (!showPreview && photos.length === 0) {
                       const { data } = await supabase
                         .from('photos')
-                        .select('id, telegram_file_id, created_at')
+                        .select('id, telegram_file_id, created_at, participants(name)')
                         .eq('event_id', id)
                         .order('created_at', { ascending: true })
-                      setPhotos(data || [])
+                      
+                      // Map the join to a flatter structure for the component
+                      const formattedPhotos = data?.map(p => ({
+                        ...p,
+                        photographer_name: (p.participants as any)?.name
+                      })) || []
+                      
+                      setPhotos(formattedPhotos)
                     }
                     setShowPreview(!showPreview)
                   }}
