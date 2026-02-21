@@ -30,12 +30,12 @@ export default async function LandingPage() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
             <Link href="/register">
-              <Button size="lg" className="bg-stone-100 text-stone-900 hover:bg-white rounded-full text-lg px-8 shadow-lg hover:shadow-xl hover:shadow-white/10 active:scale-95 transition-all duration-200 cursor-pointer">
+              <Button size="lg" className="bg-amber-500 text-stone-950 hover:bg-amber-400 rounded-full text-lg px-8 shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30 active:scale-95 transition-all duration-200 cursor-pointer border-none">
                 Start Hosting →
               </Button>
             </Link>
             <Link href="/login">
-              <Button size="lg" variant="outline" className="border-stone-700 text-stone-300 hover:bg-stone-900 hover:border-stone-500 rounded-full text-lg px-8 shadow-sm hover:shadow-md active:scale-95 transition-all duration-200 cursor-pointer">
+              <Button size="lg" className="bg-stone-800 text-stone-100 hover:bg-stone-700 border-stone-700 rounded-full text-lg px-8 shadow-sm hover:shadow-md active:scale-95 transition-all duration-200 cursor-pointer">
                 Sign In
               </Button>
             </Link>
