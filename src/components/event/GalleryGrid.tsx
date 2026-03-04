@@ -117,6 +117,21 @@ export default function GalleryGrid({ photos, isRevealing, showPhotographer = tr
             className="absolute top-4 right-4 z-50 flex items-center gap-2"
             style={{ opacity: Math.max(0, 1 - translateY / 100) }}
           >
+            {showDelete && onDelete && (
+              <button
+                onClick={(e) => { 
+                  e.stopPropagation()
+                  if (lightboxIndex !== null) {
+                    onDelete(photos[lightboxIndex].id)
+                    closeLightbox()
+                  }
+                }}
+                className="p-2 text-red-400 hover:text-red-500 transition-colors mr-2"
+                title="Delete Media"
+              >
+                <Trash className="w-6 h-6" />
+              </button>
+            )}
             <a
               href={`/api/photos/${photos[lightboxIndex].telegram_file_id}?download=1`}
               className="p-2 text-stone-400 hover:text-white transition-colors"
