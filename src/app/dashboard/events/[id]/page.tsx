@@ -28,6 +28,8 @@ export default function EventDetailPage() {
   const [promoCode, setPromoCode] = useState("")
   const [promoStatus, setPromoStatus] = useState<string | null>(null)
   const [newRevealTime, setNewRevealTime] = useState("")
+  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({})
+  const [isUploading, setIsUploading] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -185,21 +187,51 @@ export default function EventDetailPage() {
     const files = e.target.files
     if (!files || files.length === 0) return
 
-    setLoading(true)
+    setIsUploading(true)
+    setUploadProgress({})
     let uploadedCount = 0
 
-    for (const file of Array.from(files)) {
-      const formData = new FormData()
-      formData.append('media', file)
-      formData.append('eventId', id as string)
-      formData.append('photographerName', 'Host')
-      
-      const mediaType = file.type.startsWith('video/') ? 'video' : 'photo'
-      formData.append('mediaType', mediaType)
-      formData.append('mimeType', file.type)
+    const uploadFile = (file: File) => {
+      return new Promise<boolean>((resolve) => {
+        const xhr = new XMLHttpRequest()
+        const formData = new FormData()
+        formData.append('media', file)
+        formData.append('eventId', id as string)
+        formData.append('photographerName', 'Host')
+        
+        const mediaType = file.type.startsWith('video/') ? 'video' : 'photo'
+        formData.append('mediaType', mediaType)
+        formData.append('mimeType', file.type)
 
-      const result = await uploadMediaToTelegram(formData)
-      if (result.success) {
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = Math.round((event.loaded / event.total) * 100)
+            setUploadProgress(prev => ({ ...prev, [file.name]: percentComplete }))
+          }
+        }
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(true)
+          } else {
+            console.error('Upload failed', xhr.responseText)
+            resolve(false)
+          }
+        }
+
+        xhr.onerror = () => {
+          console.error('XHR error')
+          resolve(false)
+        }
+
+        xhr.open('POST', '/api/upload')
+        xhr.send(formData)
+      })
+    }
+
+    for (const file of Array.from(files)) {
+      const success = await uploadFile(file)
+      if (success) {
         uploadedCount++
       }
     }
@@ -208,15 +240,21 @@ export default function EventDetailPage() {
       // Refresh photo list
       const { data: newPhotos } = await supabase
         .from('photos')
-        .select('*')
+        .select('id, telegram_file_id, created_at, media_type, mime_type, participants(name)')
         .eq('event_id', id)
         .order('created_at', { ascending: false })
       
-      setPhotos(newPhotos || [])
+      const formattedPhotos = newPhotos?.map(p => ({
+        ...p,
+        photographer_name: (p.participants as any)?.name
+      })) || []
+      
+      setPhotos(formattedPhotos)
       setPhotosCount(newPhotos?.length || 0)
     }
 
-    setLoading(false)
+    setIsUploading(false)
+    setUploadProgress({})
   }
 
   const handleOpenCamera = () => {
@@ -378,20 +416,20 @@ export default function EventDetailPage() {
 
                 <div className="h-px bg-stone-800/50 mx-6" />
 
-                {/* Reveal Time */}
+                 {/* Reveal Time */}
                 <div className="p-6 space-y-4 hover:bg-stone-800/20 transition-colors">
                   <div>
                     <p className="text-sm font-medium text-stone-100">Reveal Timer</p>
                     <p className="text-xs text-stone-500 mt-0.5">Adjust when photos are automatically revealed</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-2">
                     <input
                       type="datetime-local"
                       value={newRevealTime}
                       onChange={(e) => setNewRevealTime(e.target.value)}
-                      className="flex-1 bg-stone-950/50 border border-stone-800 rounded-xl px-4 py-2 text-sm text-stone-100 focus:outline-none focus:border-amber-500/50"
+                      className="flex-1 bg-stone-950/50 border border-stone-800 rounded-xl px-4 py-2.5 text-sm text-stone-100 focus:outline-none focus:border-amber-500/50"
                     />
-                    <Button size="sm" className="bg-amber-500 text-stone-950 hover:bg-amber-400 rounded-xl px-5 text-[11px] font-bold" onClick={handleRevealTimeUpdate}>
+                    <Button size="sm" className="bg-amber-500 text-stone-950 hover:bg-amber-400 rounded-xl px-6 py-2.5 h-auto text-[11px] font-bold shrink-0 shadow-lg shadow-amber-500/10 active:scale-95 transition-all" onClick={handleRevealTimeUpdate}>
                       Set Timer
                     </Button>
                   </div>
@@ -495,9 +533,9 @@ export default function EventDetailPage() {
 
             {/* Admin Preview */}
             <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
-              <CardHeader className="flex flex-row items-center justify-between border-b border-stone-800/50 pb-4">
+                <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-stone-800/50 pb-4 gap-4 sm:gap-0">
                 <CardTitle className="text-xl font-serif italic text-stone-100 tracking-tight">Media Preview</CardTitle>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                   <input
                     type="file"
                     id="host-upload"
@@ -509,25 +547,25 @@ export default function EventDetailPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="rounded-full text-[10px] uppercase tracking-[0.2em] font-mono text-stone-500 hover:text-amber-500"
+                    className="flex-1 sm:flex-none rounded-full text-[10px] uppercase tracking-[0.2em] font-mono text-stone-500 hover:text-amber-500 border border-stone-800 sm:border-transparent"
                     onClick={() => document.getElementById('host-upload')?.click()}
                   >
                     <Plus className="w-3.5 h-3.5 mr-2" />
-                    Upload
+                    <span className="xs:inline">Upload</span>
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="rounded-full text-[10px] uppercase tracking-[0.2em] font-mono text-stone-500 hover:text-amber-500"
+                    className="flex-1 sm:flex-none rounded-full text-[10px] uppercase tracking-[0.2em] font-mono text-stone-500 hover:text-amber-500 border border-stone-800 sm:border-transparent"
                     onClick={handleOpenCamera}
                   >
                     <Camera className="w-3.5 h-3.5 mr-2" />
-                    Camera
+                    <span className="xs:inline">Camera</span>
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="rounded-full text-[10px] uppercase tracking-[0.2em] font-mono text-stone-500 hover:text-amber-500 ml-2"
+                    className="flex-1 sm:flex-none rounded-full text-[10px] uppercase tracking-[0.2em] font-mono text-stone-500 hover:text-amber-500 border border-stone-800 sm:border-transparent"
                     onClick={async () => {
                       if (!showPreview && photos.length === 0) {
                         const { data } = await supabase
@@ -547,10 +585,36 @@ export default function EventDetailPage() {
                     }}
                   >
                     <Eye className="w-3.5 h-3.5 mr-2" />
-                    {showPreview ? 'Close' : `View (${photosCount})`}
+                    <span className="xs:inline">{showPreview ? 'Close' : `View (${photosCount})`}</span>
                   </Button>
                 </div>
               </CardHeader>
+               {isUploading && (
+                <div className="p-6 border-b border-stone-800/50 bg-amber-500/5 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="flex justify-between items-center mb-4">
+                    <p className="text-[10px] uppercase font-mono tracking-[0.2em] text-amber-500 animate-pulse">
+                      Vault Upload in progress...
+                    </p>
+                    <span className="text-amber-500 font-mono text-[10px]">
+                      {Object.values(uploadProgress).reduce((a, b) => a + b, 0) / Math.max(1, Object.keys(uploadProgress).length)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-stone-950 h-2 rounded-full overflow-hidden border border-stone-900 shadow-inner">
+                    <div 
+                      className="bg-gradient-to-r from-amber-600 to-amber-400 h-full transition-all duration-300 shadow-[0_0_15px_rgba(245,158,11,0.4)]"
+                      style={{ width: `${Object.values(uploadProgress).reduce((a, b) => a + b, 0) / Math.max(1, Object.keys(uploadProgress).length)}%` }}
+                    />
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {Object.entries(uploadProgress).map(([name, progress]) => (
+                      <div key={name} className="flex items-center gap-1.5 bg-stone-900/50 px-2 py-1 rounded-md border border-stone-800">
+                        <span className="text-[8px] font-mono text-stone-500 truncate max-w-[80px]">{name}</span>
+                        <span className="text-[8px] font-mono text-amber-500">{progress}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               {showPreview && (
                 <CardContent className="pt-6">
                   {photos.length === 0 ? (
