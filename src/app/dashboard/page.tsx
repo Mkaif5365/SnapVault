@@ -26,9 +26,9 @@ export default async function DashboardPage() {
 
       <div className="max-w-5xl mx-auto space-y-8 relative z-10">
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 border-b border-stone-900 pb-8">
-          <div>
-            <h1 className="text-4xl font-serif text-stone-100 italic tracking-tight">Host Dashboard</h1>
-            <p className="text-stone-500 mt-1 font-light">Manage your event vaults and reveal times.</p>
+          <div className="max-w-full overflow-hidden">
+            <h1 className="text-3xl sm:text-4xl font-serif text-stone-100 italic tracking-tight">Host Dashboard</h1>
+            <p className="text-stone-500 mt-1 font-light text-sm sm:text-base">Manage your event vaults and reveal times.</p>
           </div>
           <div className="flex gap-3 w-full sm:w-auto">
             <Link href="/dashboard/events/new" className="flex-1 sm:flex-none">
@@ -98,13 +98,13 @@ export default async function DashboardPage() {
             })}
           </div>
         ) : (
-          <div className="bg-stone-900/20 border-dashed border-2 border-stone-800/50 rounded-3xl p-16 text-center space-y-6 flex flex-col items-center">
-            <div className="w-20 h-20 bg-stone-900 rounded-2xl flex items-center justify-center shadow-inner border border-stone-800">
-              <Camera className="w-8 h-8 text-stone-700" />
+          <div className="bg-stone-900/20 border-dashed border-2 border-stone-800/50 rounded-3xl p-8 sm:p-16 text-center space-y-6 flex flex-col items-center">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-stone-900 rounded-2xl flex items-center justify-center shadow-inner border border-stone-800">
+              <Camera className="w-6 h-6 sm:w-8 sm:h-8 text-stone-700" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-2xl font-serif italic text-stone-100 tracking-tight">No Active Vaults</h3>
-              <p className="text-stone-500 max-w-sm mx-auto text-sm font-light">Your events will appear here once you create your first event vault.</p>
+              <h3 className="text-xl sm:text-2xl font-serif italic text-stone-100 tracking-tight">No Active Vaults</h3>
+              <p className="text-stone-500 max-w-xs sm:max-w-sm mx-auto text-xs sm:text-sm font-light">Your events will appear here once you create your first event vault.</p>
             </div>
             <Link href="/dashboard/events/new">
               <Button className="bg-amber-500 text-stone-950 hover:bg-amber-400 rounded-full px-10 font-medium shadow-lg shadow-amber-500/10">

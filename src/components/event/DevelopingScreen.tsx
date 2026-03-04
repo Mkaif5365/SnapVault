@@ -75,7 +75,7 @@ export default function DevelopingScreen({ eventName, revealTime, photosCount, p
         <div className="space-y-3">
           <p className="text-[10px] uppercase tracking-[0.4em] text-red-500/60 font-mono">Vault Status</p>
           <h1 className="text-4xl font-serif italic text-stone-200">{eventName}</h1>
-          <p className="text-stone-600 text-sm">Your images are currently hidden...</p>
+          <p className="text-stone-600 text-sm">Your media is currently hidden...</p>
         </div>
 
         {/* Countdown Timer */}
@@ -114,7 +114,7 @@ export default function DevelopingScreen({ eventName, revealTime, photosCount, p
           </div>
           <p className="text-stone-700 text-[10px] italic text-center">
             {photosCount === 0 
-              ? "No images captured yet." 
+              ? "No media captured yet." 
               : photosCount >= photoLimit 
                 ? "Vault is full!" 
                 : `${photoLimit - photosCount} slots remaining.`}

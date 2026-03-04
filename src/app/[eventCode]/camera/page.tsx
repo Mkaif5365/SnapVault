@@ -1,16 +1,18 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { Camera, RefreshCcw, Flashlight, ArrowLeft, Loader2, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
 import { applyFilterToCanvas, FilterType, FILTERS } from "@/components/camera/CameraFilters"
-import { uploadPhotoToTelegram } from "@/lib/telegram/actions"
+import { uploadMediaToTelegram } from "@/lib/telegram/actions"
 
 export default function CameraPage() {
   const { eventCode } = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isHost = searchParams.get('host') === '1'
   const [loading, setLoading] = useState(true)
   const [event, setEvent] = useState<any>(null)
   const [photosCount, setPhotosCount] = useState(0)
@@ -19,9 +21,18 @@ export default function CameraPage() {
   const [flash, setFlash] = useState(false)
   const [filter, setFilter] = useState<FilterType>('none')
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment')
+  const [captureMode, setCaptureMode] = useState<'photo' | 'video'>('photo')
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordingTime, setRecordingTime] = useState(0)
+  const [previewBlob, setPreviewBlob] = useState<Blob | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [perFileProgress, setPerFileProgress] = useState(0)
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const recordedChunksRef = useRef<Blob[]>([])
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -86,6 +97,123 @@ export default function CameraPage() {
     setFacingMode(prev => prev === 'user' ? 'environment' : 'user')
   }
 
+  const toggleCaptureMode = () => {
+    if (isRecording || isCapturing) return
+    setCaptureMode(prev => prev === 'photo' ? 'video' : 'photo')
+  }
+
+  const startRecording = () => {
+    if (!stream) return
+    
+    recordedChunksRef.current = []
+    const mimeType = MediaRecorder.isTypeSupported('video/mp4') ? 'video/mp4' : 'video/webm'
+    const recorder = new MediaRecorder(stream, { mimeType })
+    
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) {
+        recordedChunksRef.current.push(e.data)
+      }
+    }
+
+    recorder.onstop = () => {
+      const blob = new Blob(recordedChunksRef.current, { type: mimeType })
+      setPreviewBlob(blob)
+      setPreviewUrl(URL.createObjectURL(blob))
+      setIsRecording(false)
+      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current)
+    }
+
+    mediaRecorderRef.current = recorder
+    recorder.start()
+    setIsRecording(true)
+    setRecordingTime(0)
+
+    recordingTimerRef.current = setInterval(() => {
+      setRecordingTime(prev => {
+        if (prev >= 44.9) { // 45s limit
+          stopRecording()
+          return 45
+        }
+        return prev + 0.1
+      })
+    }, 100)
+  }
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop()
+    }
+  }
+
+  const handleCapture = () => {
+    if (captureMode === 'photo') {
+      capturePhoto()
+    } else {
+      if (isRecording) {
+        stopRecording()
+      } else {
+        startRecording()
+      }
+    }
+  }
+
+  const uploadVideo = async () => {
+    if (!previewBlob || !event) return
+    setIsCapturing(true)
+    setPerFileProgress(0)
+    
+    const formData = new FormData()
+    formData.append("file", previewBlob, "video.mp4")
+    formData.append("eventId", event.id)
+    const participantId = localStorage.getItem(`participant_${event.id}`)
+    if (participantId) formData.append("participantId", participantId)
+    if (isHost && !participantId) formData.append("photographerName", "Host")
+    formData.append("mediaType", "video")
+    formData.append("mimeType", previewBlob.type)
+    formData.append("duration", recordingTime.toString())
+
+    try {
+      await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        xhr.open("POST", "/api/upload")
+
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            setPerFileProgress(Math.round((event.loaded / event.total) * 100))
+          }
+        }
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            const response = JSON.parse(xhr.responseText)
+            if (response.success) {
+              setPhotosCount(prev => prev + 1)
+              dismissPreview()
+              resolve(response)
+            } else {
+              reject(new Error(response.error || "Upload failed"))
+            }
+          } else {
+            reject(new Error(`Upload failed with status ${xhr.status}`))
+          }
+        }
+        xhr.onerror = () => reject(new Error("Network error"))
+        xhr.send(formData)
+      })
+    } catch (err: any) {
+      alert(err.message || "Video upload failed")
+    }
+    
+    setIsCapturing(false)
+    setPerFileProgress(0)
+  }
+
+  const dismissPreview = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setPreviewBlob(null)
+    setPreviewUrl(null)
+  }
+
   const capturePhoto = async () => {
     if (isCapturing || !videoRef.current || !canvasRef.current || !event) return
     if (photosCount >= event.photo_limit) {
@@ -117,22 +245,41 @@ export default function CameraPage() {
           formData.append("file", blob, "capture.jpg")
           formData.append("eventId", event.id)
           
-          // Get participant ID from localStorage
           const participantId = localStorage.getItem(`participant_${event.id}`)
           if (participantId) {
             formData.append("participantId", participantId)
+          } else if (isHost) {
+            formData.append("photographerName", "Host")
           }
-          
-          const result = await uploadPhotoToTelegram(formData)
-          
-          if (result.success) {
-            setPhotosCount(prev => prev + 1)
-          } else {
-            alert(result.error || "Upload failed")
+          formData.append("mediaType", "photo")
+          formData.append("mimeType", "image/jpeg")
+
+          try {
+            await new Promise((resolve, reject) => {
+              const xhr = new XMLHttpRequest()
+              xhr.open("POST", "/api/upload")
+              xhr.onload = () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                  const response = JSON.parse(xhr.responseText)
+                  if (response.success) {
+                    setPhotosCount(prev => prev + 1)
+                    resolve(response)
+                  } else {
+                    reject(new Error(response.error || "Upload failed"))
+                  }
+                } else {
+                  reject(new Error(`Upload failed: ${xhr.status}`))
+                }
+              }
+              xhr.onerror = () => reject(new Error("Network error"))
+              xhr.send(formData)
+            })
+          } catch (err: any) {
+            alert(err.message || "Upload failed")
           }
         }
         setIsCapturing(false)
-      }, 'image/jpeg', 0.8)
+      }, 'image/jpeg', 1.0)
     }
   }
 
@@ -175,11 +322,19 @@ export default function CameraPage() {
       {/* Header / StatusBar */}
       <div className="w-full max-w-md flex items-center justify-between px-2 pt-4">
         <button 
-          onClick={() => router.push(`/${eventCode}`)} 
-          className="flex items-center gap-1.5 p-2 text-stone-400 hover:text-stone-100 transition-colors group"
+          onClick={() => {
+            if (isHost && event?.id) {
+              router.push(`/dashboard/events/${event.id}`)
+            } else {
+              router.push(`/${eventCode}`)
+            }
+          }}
+          className="flex items-center gap-2 group text-stone-600 hover:text-stone-400"
         >
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          <span className="text-[10px] uppercase tracking-widest font-medium">Back to Hub</span>
+          <span className="text-[10px] uppercase tracking-widest font-medium">
+            {isHost ? 'Back to Dashboard' : 'Back to Hub'}
+          </span>
         </button>
         <div className="flex flex-col items-center">
           <span className="text-[10px] uppercase tracking-widest text-stone-500 mb-1">Event Vault</span>
@@ -247,6 +402,67 @@ export default function CameraPage() {
           <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-[10px] font-mono tracking-tighter">
             CAPACITY: <span className="text-amber-500">{photosCount.toString().padStart(2, '0')}</span> / {event.photo_limit}
           </div>
+
+          {/* Video Timer */}
+          {isRecording && (
+            <div className="absolute top-16 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-red-600/80 backdrop-blur-md px-3 py-1 rounded-full border border-red-500 shadow-lg animate-pulse">
+              <div className="w-2 h-2 rounded-full bg-white" />
+              <span className="text-white font-mono text-sm font-bold">
+                00:{recordingTime.toFixed(0).padStart(2, '0')} / 00:45
+              </span>
+            </div>
+          )}
+
+          {/* Mode Indicator */}
+          {!isRecording && !previewUrl && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 bg-black/40 backdrop-blur-md p-1 rounded-full border border-white/10">
+              <button 
+                onClick={() => setCaptureMode('photo')}
+                className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-bold transition-all ${
+                  captureMode === 'photo' ? 'bg-amber-500 text-stone-950' : 'text-stone-400'
+                }`}
+              >
+                Photo
+              </button>
+              <button 
+                onClick={() => setCaptureMode('video')}
+                className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-bold transition-all ${
+                  captureMode === 'video' ? 'bg-amber-500 text-stone-950' : 'text-stone-400'
+                }`}
+              >
+                Video
+              </button>
+            </div>
+          )}
+
+          {/* Preview Overlay */}
+          {previewUrl && (
+            <div className="absolute inset-0 z-20 bg-black flex flex-col">
+              <video 
+                src={previewUrl} 
+                autoPlay 
+                loop 
+                playsInline 
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute bottom-6 left-0 w-full flex justify-around px-6">
+                <Button 
+                  onClick={dismissPreview}
+                  variant="outline" 
+                  className="bg-stone-900/80 border-stone-700 text-white rounded-full px-8 backdrop-blur-md"
+                >
+                  Retake
+                </Button>
+                <Button 
+                  onClick={uploadVideo}
+                  disabled={isCapturing}
+                  className="bg-amber-500 hover:bg-amber-400 text-stone-950 rounded-full px-8 font-bold"
+                >
+                  {isCapturing ? <Loader2 className="animate-spin" /> : "Upload"}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Controls Section */}
@@ -261,19 +477,23 @@ export default function CameraPage() {
 
           {/* Shutter Button */}
           <button 
-            onClick={capturePhoto}
-            disabled={isCapturing || remaining === 0}
+            onClick={handleCapture}
+            disabled={isCapturing || remaining === 0 || previewUrl !== null}
             className={`relative w-20 h-20 rounded-full flex items-center justify-center transition-all active:scale-95 mx-auto ${
-              remaining === 0 ? 'opacity-50 grayscale' : ''
+              remaining === 0 || previewUrl ? 'opacity-50 grayscale' : ''
             }`}
           >
             {/* Shutter Outer */}
             <div className="absolute inset-0 rounded-full bg-stone-700 border-4 border-stone-600 shadow-lg" />
             {/* Shutter Core */}
             <div className={`relative w-16 h-16 rounded-full border-4 border-stone-500 flex items-center justify-center transition-colors ${
-              isCapturing ? 'bg-amber-600' : 'bg-amber-500 hover:bg-amber-400'
+              isRecording ? 'bg-red-600 animate-pulse' : isCapturing ? 'bg-amber-600' : 'bg-amber-500 hover:bg-amber-400'
             }`}>
-              <div className="w-10 h-10 rounded-full border-2 border-amber-600/50" />
+              {isRecording ? (
+                <div className="w-6 h-6 rounded-sm bg-white" />
+              ) : (
+                <div className="w-10 h-10 rounded-full border-2 border-amber-600/50" />
+              )}
             </div>
           </button>
 
@@ -285,7 +505,7 @@ export default function CameraPage() {
       </div>
 
       <div className="w-full max-w-md bg-stone-900/50 backdrop-blur-md border border-stone-800 p-4 rounded-3xl flex flex-col gap-3">
-        <p className="text-[10px] uppercase tracking-[0.3em] text-stone-500 text-center">Image Filters</p>
+        <p className="text-[10px] uppercase tracking-[0.3em] text-stone-500 text-center">Media Filters</p>
         <div className="flex items-center justify-between gap-2 overflow-x-auto pb-2 px-2 scrollbar-hide">
           {FILTERS.map((f) => (
             <button

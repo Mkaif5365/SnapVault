@@ -128,3 +128,29 @@ export async function applyPromocode(eventId: string, code: string) {
 
   return { success: true, newLimit: promo.photo_limit }
 }
+
+export async function deleteMedia(photoId: string, eventId: string) {
+  const supabase = await createClient()
+  
+  // 1. Verify host ownership
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Unauthorized" }
+
+  const { data: event } = await supabase
+    .from('events')
+    .select('host_id')
+    .eq('id', eventId)
+    .single()
+
+  if (!event || event.host_id !== user.id) return { error: "Unauthorized" }
+
+  // 2. Delete the photo
+  const { error } = await supabase
+    .from('photos')
+    .delete()
+    .eq('id', photoId)
+    .eq('event_id', eventId)
+
+  if (error) return { error: error.message }
+  return { success: true }
+}

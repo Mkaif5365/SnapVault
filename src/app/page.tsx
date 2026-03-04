@@ -32,21 +32,21 @@ export default async function LandingPage() {
             </div>
           </div>
           <p className="text-[10px] uppercase tracking-[0.5em] text-amber-500/70 font-mono">Disposable Camera for Events</p>
-          <h1 className="text-7xl md:text-8xl font-serif italic text-stone-100 tracking-tight leading-[0.9]">
+          <h1 className="text-5xl xs:text-7xl md:text-8xl font-serif italic text-stone-100 tracking-tight leading-[0.9] break-words">
             SnapVault
           </h1>
           <p className="text-xl md:text-2xl text-stone-400 max-w-xl mx-auto leading-relaxed font-light">
             A time-locked photo experience for your events. Capture now, reveal later — like developing film.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <Link href="/register">
-              <Button size="lg" className="bg-amber-500 text-stone-950 hover:bg-amber-400 rounded-full text-lg px-8 shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30 active:scale-95 transition-all duration-200 cursor-pointer border-none">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4 w-full max-w-xs sm:max-w-none mx-auto">
+            <Link href="/register" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full sm:w-auto bg-amber-500 text-stone-950 hover:bg-amber-400 rounded-full text-lg px-8 shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30 active:scale-95 transition-all duration-200 cursor-pointer border-none">
                 Start Hosting →
               </Button>
             </Link>
-            <Link href="/login">
-              <Button size="lg" className="bg-stone-800 text-stone-100 hover:bg-stone-700 border-stone-700 rounded-full text-lg px-8 shadow-sm hover:shadow-md active:scale-95 transition-all duration-200 cursor-pointer">
+            <Link href="/login" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full sm:w-auto bg-stone-800 text-stone-100 hover:bg-stone-700 border-stone-700 rounded-full text-lg px-8 shadow-sm hover:shadow-md active:scale-95 transition-all duration-200 cursor-pointer">
                 Sign In
               </Button>
             </Link>

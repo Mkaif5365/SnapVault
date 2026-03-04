@@ -6,11 +6,14 @@ import { cookies } from "next/headers"
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID
 
-export async function uploadPhotoToTelegram(formData: FormData) {
+export async function uploadMediaToTelegram(formData: FormData) {
   try {
     const file = formData.get("file") as File
     const eventId = formData.get("eventId") as string
     const participantId = formData.get("participantId") as string
+    const mediaType = (formData.get("mediaType") as string) || "photo"
+    const mimeType = (formData.get("mimeType") as string) || file.type
+    const duration = parseFloat(formData.get("duration") as string || "0")
 
     if (!file || !eventId) {
       return { error: "Missing file or event ID" }
@@ -21,14 +24,19 @@ export async function uploadPhotoToTelegram(formData: FormData) {
       return { error: "Server storage configuration error" }
     }
 
-    // 1. Send to Telegram
-    const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`
+    // 1. Determine Telegram method and field
+    // Logic: Photos always as document (original quality). 
+    // Videos < 7s as video (animation/preview), >= 7s as document (original quality).
+    const isShortVideo = mediaType === "video" && duration < 7
+    const method = isShortVideo ? "sendVideo" : "sendDocument"
+    const fileField = isShortVideo ? "video" : "document"
+
+    const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/${method}`
     
-    // Telegram's sendPhoto expects multipart/form-data
     const telegramFormData = new FormData()
     telegramFormData.append("chat_id", TELEGRAM_CHAT_ID)
-    telegramFormData.append("photo", file)
-    telegramFormData.append("caption", `SnapVault Capture | Event: ${eventId}`)
+    telegramFormData.append(fileField, file)
+    telegramFormData.append("caption", `SnapVault Capture | Type: ${mediaType} | Event: ${eventId}`)
 
     const response = await fetch(telegramUrl, {
       method: "POST",
@@ -42,7 +50,20 @@ export async function uploadPhotoToTelegram(formData: FormData) {
       return { error: `Telegram upload failed: ${data.description}` }
     }
 
-    const telegramFileId = data.result.photo[data.result.photo.length - 1].file_id
+    // Extract file ID based on the result type
+    let telegramFileId = ""
+    if (isShortVideo && data.result.video) {
+      telegramFileId = data.result.video.file_id
+    } else if (data.result.document) {
+      telegramFileId = data.result.document.file_id
+    } else if (data.result.photo) {
+      // Fallback for photos (though we send as document)
+      telegramFileId = data.result.photo[data.result.photo.length - 1].file_id
+    }
+
+    if (!telegramFileId) {
+      return { error: "Failed to extract file ID from Telegram response" }
+    }
 
     // 2. Save metadata to Supabase
     const supabase = await createClient()
@@ -52,6 +73,8 @@ export async function uploadPhotoToTelegram(formData: FormData) {
         event_id: eventId,
         participant_id: participantId || null,
         telegram_file_id: telegramFileId,
+        media_type: mediaType,
+        mime_type: mimeType,
       })
 
     if (dbError) {

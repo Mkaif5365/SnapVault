@@ -3,13 +3,14 @@
 import { QRCodeSVG } from "qrcode.react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Copy, ExternalLink, Calendar, Camera, Users, CheckCircle2, Trash2, Eye, Download, Lock, Unlock, Clock, Trophy, UserX, UserMinus, Tag } from "lucide-react"
+import { ArrowLeft, Copy, ExternalLink, Calendar, Camera, Users, CheckCircle2, Trash2, Eye, Download, Lock, Unlock, Clock, Trophy, UserX, UserMinus, Tag, Plus, Trash } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useParams, useRouter } from "next/navigation"
 import GalleryGrid from "@/components/event/GalleryGrid"
-import { removeParticipant, kickParticipant, updateRevealTime, toggleEventLock, applyPromocode } from "@/lib/actions/host"
+import { removeParticipant, kickParticipant, updateRevealTime, toggleEventLock, applyPromocode, deleteMedia } from "@/lib/actions/host"
+import { uploadMediaToTelegram } from "@/lib/telegram/actions"
 
 export default function EventDetailPage() {
   const { id } = useParams()
@@ -169,6 +170,59 @@ export default function EventDetailPage() {
     }
   }
 
+  const handleDeleteMedia = async (photoId: string) => {
+    if (!confirm("Are you sure you want to delete this media item?")) return
+    const result = await deleteMedia(photoId, id as string)
+    if (result.success) {
+      setPhotos(prev => prev.filter(p => p.id !== photoId))
+      setPhotosCount(prev => prev - 1)
+    } else {
+      alert(result.error)
+    }
+  }
+
+  const handleHostUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    setLoading(true)
+    let uploadedCount = 0
+
+    for (const file of Array.from(files)) {
+      const formData = new FormData()
+      formData.append('media', file)
+      formData.append('eventId', id as string)
+      formData.append('photographerName', 'Host')
+      
+      const mediaType = file.type.startsWith('video/') ? 'video' : 'photo'
+      formData.append('mediaType', mediaType)
+      formData.append('mimeType', file.type)
+
+      const result = await uploadMediaToTelegram(formData)
+      if (result.success) {
+        uploadedCount++
+      }
+    }
+
+    if (uploadedCount > 0) {
+      // Refresh photo list
+      const { data: newPhotos } = await supabase
+        .from('photos')
+        .select('*')
+        .eq('event_id', id)
+        .order('created_at', { ascending: false })
+      
+      setPhotos(newPhotos || [])
+      setPhotosCount(newPhotos?.length || 0)
+    }
+
+    setLoading(false)
+  }
+
+  const handleOpenCamera = () => {
+    router.push(`/${event.code}/camera?host=1`)
+  }
+
   const handleApplyPromo = async () => {
     if (!promoCode.trim()) return
     setPromoStatus("Applying...")
@@ -211,60 +265,61 @@ export default function EventDetailPage() {
           <div className="lg:col-span-2 space-y-8">
             <header className="space-y-6">
               <div className="flex items-start justify-between">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <span className={`text-[9px] uppercase tracking-[0.2em] px-2.5 py-1 rounded-full font-mono font-bold ${isRevealed ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'}`}>
+                <div className="space-y-4 max-w-full overflow-hidden">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <span className={`text-[8px] sm:text-[9px] uppercase tracking-[0.2em] px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full font-mono font-bold ${isRevealed ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'}`}>
                       {isRevealed ? 'Revealed' : 'Developing'}
                     </span>
                     {event.is_locked && (
-                      <span className="text-[9px] uppercase tracking-[0.2em] px-2.5 py-1 rounded-full font-mono font-bold bg-red-500/10 text-red-500 border border-red-500/20">
+                      <span className="text-[8px] sm:text-[9px] uppercase tracking-[0.2em] px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full font-mono font-bold bg-red-500/10 text-red-500 border border-red-500/20">
                         Locked
                       </span>
                     )}
                   </div>
-                  <h1 className="text-5xl md:text-6xl font-serif text-stone-100 italic tracking-tight leading-tight capitalize">{event.name}</h1>
+                  <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl font-serif text-stone-100 italic tracking-tight leading-tight capitalize break-words">{event.name}</h1>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-stone-600 hover:text-red-400 transition-colors h-10 px-4 rounded-xl text-xs font-mono uppercase tracking-wider"
+                  className="text-stone-600 hover:text-red-400 transition-colors h-9 sm:h-10 px-3 sm:px-4 rounded-xl text-[10px] sm:text-xs font-mono uppercase tracking-wider shrink-0"
                   onClick={handleDelete}
                 >
-                  <Trash2 className="w-3.5 h-3.5 mr-2" />
-                  Delete Event
+                  <Trash2 className="w-3 sm:w-3.5 h-3 sm:h-3.5 mr-1.5 sm:mr-2" />
+                  <span className="hidden xs:inline">Delete Event</span>
+                  <span className="xs:hidden">Delete</span>
                 </Button>
               </div>
               <p className="text-stone-400 text-lg leading-relaxed font-light max-w-2xl">{event.description || "No description provided."}</p>
             </header>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
-                <CardContent className="pt-6 pb-5 flex flex-col items-center">
-                  <Calendar className="w-4 h-4 text-stone-600 mb-3" />
-                  <p className="text-[9px] uppercase tracking-[0.2em] text-stone-500 font-mono mb-1">Reveal</p>
-                  <p className="font-medium text-stone-100 text-sm">{revealDate.toLocaleDateString()}</p>
+                <CardContent className="pt-5 pb-4 sm:pt-6 sm:pb-5 flex flex-col items-center">
+                  <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-stone-600 mb-2 sm:mb-3" />
+                  <p className="text-[8px] sm:text-[9px] uppercase tracking-[0.2em] text-stone-500 font-mono mb-1">Reveal</p>
+                  <p className="font-medium text-stone-100 text-xs sm:text-sm">{revealDate.toLocaleDateString()}</p>
                 </CardContent>
               </Card>
               <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
-                <CardContent className="pt-6 pb-5 flex flex-col items-center">
-                  <Users className="w-4 h-4 text-stone-600 mb-3" />
-                  <p className="text-[9px] uppercase tracking-[0.2em] text-stone-500 font-mono mb-1">Guests</p>
-                  <p className="font-medium text-stone-100 text-sm">{participantsCount}</p>
+                <CardContent className="pt-5 pb-4 sm:pt-6 sm:pb-5 flex flex-col items-center">
+                  <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-stone-600 mb-2 sm:mb-3" />
+                  <p className="text-[8px] sm:text-[9px] uppercase tracking-[0.2em] text-stone-500 font-mono mb-1">Guests</p>
+                  <p className="font-medium text-stone-100 text-xs sm:text-sm">{participantsCount}</p>
                 </CardContent>
               </Card>
               <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
-                <CardContent className="pt-6 pb-5 flex flex-col items-center">
-                  <Camera className="w-4 h-4 text-stone-600 mb-3" />
-                  <p className="text-[9px] uppercase tracking-[0.2em] text-stone-500 font-mono mb-1">Images</p>
-                  <p className="font-medium text-stone-100 text-sm">{photosCount} / {event.photo_limit}</p>
+                <CardContent className="pt-5 pb-4 sm:pt-6 sm:pb-5 flex flex-col items-center">
+                  <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-stone-600 mb-2 sm:mb-3" />
+                   <p className="text-[8px] sm:text-[9px] uppercase tracking-[0.2em] text-stone-500 font-mono mb-1">Media</p>
+                  <p className="font-medium text-stone-100 text-xs sm:text-sm">{photosCount} / {event.photo_limit}</p>
                 </CardContent>
               </Card>
               <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
-                <CardContent className="pt-6 pb-5 flex flex-col items-center">
-                  <Trophy className="w-4 h-4 text-amber-500/70 mb-3" />
-                  <p className="text-[9px] uppercase tracking-[0.2em] text-stone-500 font-mono mb-1">Best Shot</p>
-                  <p className="font-medium text-stone-100 text-sm truncate w-full text-center">{topPhotographer || '—'}</p>
+                <CardContent className="pt-5 pb-4 sm:pt-6 sm:pb-5 flex flex-col items-center">
+                  <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500/70 mb-2 sm:mb-3" />
+                  <p className="text-[8px] sm:text-[9px] uppercase tracking-[0.2em] text-stone-500 font-mono mb-1">Best Shot</p>
+                  <p className="font-medium text-stone-100 text-xs sm:text-sm truncate w-full text-center px-1">{topPhotographer || '—'}</p>
                 </CardContent>
               </Card>
             </div>
@@ -353,7 +408,7 @@ export default function EventDetailPage() {
                   <div className="flex items-center gap-2 text-xs">
                     <input
                       type="text"
-                      placeholder="ENTER PROMOCYCLE..."
+                      placeholder="ENTER PROMOCODE"
                       value={promoCode}
                       onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                       className="flex-1 bg-stone-950/50 border border-stone-800 rounded-xl px-4 py-2 text-sm font-mono uppercase tracking-widest text-stone-100 placeholder:text-stone-700 focus:outline-none focus:border-amber-500/50"
@@ -375,7 +430,7 @@ export default function EventDetailPage() {
                 <div className="flex items-center justify-between p-6 hover:bg-stone-800/20 transition-colors">
                   <div>
                     <p className="text-sm font-medium text-stone-100">Batch Export</p>
-                    <p className="text-xs text-stone-500 mt-0.5">Export all images as a ZIP archive</p>
+                    <p className="text-xs text-stone-500 mt-0.5">Export all media as a ZIP archive</p>
                   </div>
                   <a href={`/api/events/${id}/download`} download>
                     <Button variant="outline" size="sm" className="rounded-full text-[10px] uppercase tracking-wider font-mono border-stone-700 text-stone-400 hover:bg-stone-800 hover:text-stone-100" disabled={photosCount === 0}>
@@ -400,39 +455,39 @@ export default function EventDetailPage() {
                   {participants.length === 0 ? (
                     <p className="text-stone-600 text-xs italic text-center py-4 font-mono uppercase tracking-widest">No active participants</p>
                   ) : (
-                    <div className="space-y-2">
-                       {participants.map((p) => (
-                        <div key={p.id} className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
-                          p.status === 'active' ? 'bg-stone-950/30 border-stone-800 hover:border-stone-700' :
-                          p.status === 'removed' ? 'bg-amber-950/10 border-amber-900/20 opacity-50' :
-                          'bg-red-950/10 border-red-900/20 opacity-50'
-                        }`}>
-                          <div className="space-y-1">
-                            <p className="font-medium text-stone-100 text-sm leading-none">{p.name}</p>
-                            <div className="flex items-center gap-2">
-                              <p className="text-[9px] text-stone-500 font-mono tracking-wider uppercase">
-                                Entry: {new Date(p.created_at).toLocaleDateString()}
-                              </p>
-                              {p.status !== 'active' && (
-                                <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono uppercase font-bold border ${p.status === 'removed' ? 'text-amber-600 border-amber-900/40 bg-amber-900/10' : 'text-red-500 border-red-900/40 bg-red-900/10'}`}>
-                                  {p.status}
-                                </span>
-                              )}
+                      <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+                         {participants.map((p) => (
+                          <div key={p.id} className={`flex items-center justify-between p-3 sm:p-4 rounded-xl border transition-all ${
+                            p.status === 'active' ? 'bg-stone-950/30 border-stone-800 hover:border-stone-700' :
+                            p.status === 'removed' ? 'bg-amber-950/10 border-amber-900/20 opacity-50' :
+                            'bg-red-950/10 border-red-900/20 opacity-50'
+                          }`}>
+                            <div className="space-y-1 overflow-hidden">
+                              <p className="font-medium text-stone-100 text-xs sm:text-sm leading-none truncate">{p.name}</p>
+                              <div className="flex items-center gap-2">
+                                <p className="text-[8px] sm:text-[9px] text-stone-500 font-mono tracking-wider uppercase">
+                                  {new Date(p.created_at).toLocaleDateString()}
+                                </p>
+                                {p.status !== 'active' && (
+                                  <span className={`text-[8px] px-1 py-0.5 rounded font-mono uppercase font-bold border ${p.status === 'removed' ? 'text-amber-600 border-amber-900/40 bg-amber-900/10' : 'text-red-500 border-red-900/40 bg-red-900/10'}`}>
+                                    {p.status}
+                                  </span>
+                                )}
+                              </div>
                             </div>
+                            {p.status === 'active' && (
+                              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                                <Button variant="ghost" size="sm" className="h-7 sm:h-8 px-2 sm:px-3 text-amber-600/70 hover:text-amber-500 hover:bg-amber-500/10 text-[9px] sm:text-[10px] font-mono uppercase" onClick={() => handleRemove(p.id)}>
+                                  Remove
+                                </Button>
+                                <Button variant="ghost" size="sm" className="h-7 sm:h-8 px-2 sm:px-3 text-red-600/70 hover:text-red-500 hover:bg-red-500/10 text-[9px] sm:text-[10px] font-mono uppercase" onClick={() => handleKick(p.id)}>
+                                  Kick
+                                </Button>
+                              </div>
+                            )}
                           </div>
-                          {p.status === 'active' && (
-                            <div className="flex items-center gap-2">
-                              <Button variant="ghost" size="sm" className="h-8 px-3 text-amber-600/70 hover:text-amber-500 hover:bg-amber-500/10 text-[10px] font-mono uppercase" onClick={() => handleRemove(p.id)}>
-                                Remove
-                              </Button>
-                              <Button variant="ghost" size="sm" className="h-8 px-3 text-red-600/70 hover:text-red-500 hover:bg-red-500/10 text-[10px] font-mono uppercase" onClick={() => handleKick(p.id)}>
-                                Kick
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
                   )}
                 </CardContent>
               )}
@@ -441,39 +496,74 @@ export default function EventDetailPage() {
             {/* Admin Preview */}
             <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
               <CardHeader className="flex flex-row items-center justify-between border-b border-stone-800/50 pb-4">
-                <CardTitle className="text-xl font-serif italic text-stone-100 tracking-tight">Image Preview</CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="rounded-full text-[10px] uppercase tracking-[0.2em] font-mono text-stone-500 hover:text-amber-500"
-                  onClick={async () => {
-                    if (!showPreview && photos.length === 0) {
-                      const { data } = await supabase
-                        .from('photos')
-                        .select('id, telegram_file_id, created_at, participants(name)')
-                        .eq('event_id', id)
-                        .order('created_at', { ascending: true })
-                      
-                      const formattedPhotos = data?.map(p => ({
-                        ...p,
-                        photographer_name: (p.participants as any)?.name
-                      })) || []
-                      
-                      setPhotos(formattedPhotos)
-                    }
-                    setShowPreview(!showPreview)
-                  }}
-                >
-                  <Eye className="w-3.5 h-3.5 mr-2" />
-                  {showPreview ? 'Close' : 'View Images'}
-                </Button>
+                <CardTitle className="text-xl font-serif italic text-stone-100 tracking-tight">Media Preview</CardTitle>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    id="host-upload"
+                    multiple
+                    accept="image/*,video/*"
+                    className="hidden"
+                    onChange={handleHostUpload}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="rounded-full text-[10px] uppercase tracking-[0.2em] font-mono text-stone-500 hover:text-amber-500"
+                    onClick={() => document.getElementById('host-upload')?.click()}
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-2" />
+                    Upload
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="rounded-full text-[10px] uppercase tracking-[0.2em] font-mono text-stone-500 hover:text-amber-500"
+                    onClick={handleOpenCamera}
+                  >
+                    <Camera className="w-3.5 h-3.5 mr-2" />
+                    Camera
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="rounded-full text-[10px] uppercase tracking-[0.2em] font-mono text-stone-500 hover:text-amber-500 ml-2"
+                    onClick={async () => {
+                      if (!showPreview && photos.length === 0) {
+                        const { data } = await supabase
+                          .from('photos')
+                          .select('id, telegram_file_id, created_at, media_type, mime_type, participants(name)')
+                          .eq('event_id', id)
+                          .order('created_at', { ascending: false })
+                        
+                        const formattedPhotos = data?.map(p => ({
+                          ...p,
+                          photographer_name: (p.participants as any)?.name
+                        })) || []
+                        
+                        setPhotos(formattedPhotos)
+                      }
+                      setShowPreview(!showPreview)
+                    }}
+                  >
+                    <Eye className="w-3.5 h-3.5 mr-2" />
+                    {showPreview ? 'Close' : `View (${photosCount})`}
+                  </Button>
+                </div>
               </CardHeader>
               {showPreview && (
                 <CardContent className="pt-6">
                   {photos.length === 0 ? (
-                    <p className="text-stone-600 text-xs italic py-8 text-center font-mono uppercase tracking-widest">No images captured yet</p>
+                    <p className="text-stone-600 text-xs italic py-8 text-center font-mono uppercase tracking-widest">No media captured yet</p>
                   ) : (
-                    <GalleryGrid photos={photos} isRevealing={false} />
+                    <div className="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                      <GalleryGrid 
+                        photos={photos} 
+                        isRevealing={false} 
+                        showDelete={true}
+                        onDelete={handleDeleteMedia}
+                      />
+                    </div>
                   )}
                 </CardContent>
               )}
@@ -490,30 +580,30 @@ export default function EventDetailPage() {
                 <CardDescription className="text-stone-500 text-xs">Share this QR with your participants</CardDescription>
               </CardHeader>
               <CardContent className="p-8 flex flex-col items-center space-y-8">
-                <div className="p-5 bg-white rounded-2xl shadow-[0_0_50px_rgba(255,255,255,0.05)] border border-white/10 group transition-all hover:scale-105 active:scale-95 cursor-pointer">
-                  <QRCodeSVG value={joinUrl} size={180} level="H" />
+                <div className="p-4 sm:p-5 bg-white rounded-2xl shadow-[0_0_50px_rgba(255,255,255,0.05)] border border-white/10 group transition-all hover:scale-105 active:scale-95 cursor-pointer max-w-full">
+                  <QRCodeSVG value={joinUrl} size={160} level="H" className="w-full h-auto max-w-[180px]" />
                 </div>
 
                 <div className="w-full space-y-4">
-                  <div className="bg-stone-950/50 border border-stone-800 rounded-2xl p-4 text-center">
-                    <p className="text-[9px] uppercase tracking-[0.3em] text-stone-600 font-mono mb-2">Access Token</p>
-                    <p className="text-3xl font-mono font-bold tracking-[0.2em] text-stone-100 select-all">{event.code}</p>
+                  <div className="bg-stone-950/50 border border-stone-800 rounded-2xl p-3 sm:p-4 text-center">
+                    <p className="text-[8px] sm:text-[9px] uppercase tracking-[0.3em] text-stone-600 font-mono mb-1.5 sm:mb-2 text-center">Access Token</p>
+                    <p className="text-2xl sm:text-3xl font-mono font-bold tracking-[0.2em] text-stone-100 select-all">{event.code}</p>
                   </div>
 
                   <Button
                     onClick={copyJoinLink}
-                    className={`w-full h-12 rounded-2xl transition-all font-bold ${copied ? 'bg-green-600 text-white' : 'bg-amber-500 text-stone-950 hover:bg-amber-400'}`}
+                    className={`w-full h-11 sm:h-12 rounded-2xl transition-all font-bold text-xs sm:text-sm ${copied ? 'bg-green-600 text-white' : 'bg-amber-500 text-stone-950 hover:bg-amber-400'}`}
                   >
                     {copied ? (
-                      <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Copied Token</span>
+                      <span className="flex items-center gap-2"><CheckCircle2 className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Copied</span>
                     ) : (
-                      <span className="flex items-center gap-2"><Copy className="w-4 h-4" /> Copy Access Link</span>
+                      <span className="flex items-center gap-2"><Copy className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Copy Access Link</span>
                     )}
                   </Button>
 
                   <Link href={`/${event.code}`} target="_blank" className="w-full">
-                    <Button variant="outline" className="w-full h-12 rounded-2xl border-stone-800 text-stone-400 hover:bg-stone-800 hover:text-stone-100 transition-all font-medium">
-                      <ExternalLink className="w-4 h-4 mr-2" /> Open Guest View
+                    <Button variant="outline" className="w-full h-11 sm:h-12 rounded-2xl border-stone-800 text-stone-400 hover:bg-stone-800 hover:text-stone-100 transition-all font-medium text-xs sm:text-sm">
+                      <ExternalLink className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-1.5 sm:mr-2" /> Open Guest View
                     </Button>
                   </Link>
                 </div>

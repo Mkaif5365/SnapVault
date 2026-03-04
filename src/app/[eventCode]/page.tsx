@@ -24,6 +24,7 @@ export default function GuestEventPage() {
   const [isRevealing, setIsRevealing] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 })
+  const [perFileProgress, setPerFileProgress] = useState(0)
   const [participant, setParticipant] = useState<any>(null)
   const supabase = createClient()
 
@@ -62,7 +63,7 @@ export default function GuestEventPage() {
         // Fetch all photos for the gallery
         const { data: photoData } = await supabase
           .from('photos')
-          .select('id, telegram_file_id, created_at')
+          .select('id, telegram_file_id, created_at, media_type, mime_type')
           .eq('event_id', data.id)
           .order('created_at', { ascending: true })
 
@@ -141,34 +142,65 @@ export default function GuestEventPage() {
 
     setUploading(true)
     setUploadProgress({ current: 0, total: files.length })
-
-    const { uploadPhotoToTelegram } = await import("@/lib/telegram/actions")
+    setPerFileProgress(0)
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
       
-      // 2. Size limit: 20MB
-      if (file.size > 20 * 1024 * 1024) {
-        alert(`File "${file.name}" is too large (max 20MB). Skipping.`)
+      // 2. Size limit: 50MB
+      if (file.size > 50 * 1024 * 1024) {
+        alert(`File "${file.name}" is too large (max 50MB). Skipping.`)
         continue
       }
 
       setUploadProgress(prev => ({ ...prev, current: i + 1 }))
+      setPerFileProgress(0)
 
       const formData = new FormData()
       formData.append("file", file)
       formData.append("eventId", event.id)
-      formData.append("participantId", participant.id)
+      formData.append("participantId", participant?.id || "")
+      const isVideo = file.type.startsWith('video/')
+      formData.append("mediaType", isVideo ? "video" : "photo")
+      formData.append("mimeType", file.type)
+      formData.append("photographerName", participant?.name || "Guest")
 
-      const result = await uploadPhotoToTelegram(formData)
-      if (result.error) {
-        console.error(`Failed to upload ${file.name}:`, result.error)
-      } else {
-        setPhotosCount(prev => prev + 1)
+      try {
+        await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest()
+          xhr.open("POST", "/api/upload")
+
+          xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+              const percent = Math.round((event.loaded / event.total) * 100)
+              setPerFileProgress(percent)
+            }
+          }
+
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              const response = JSON.parse(xhr.responseText)
+              if (response.success) {
+                setPhotosCount(prev => prev + 1)
+                resolve(response)
+              } else {
+                reject(new Error(response.error || "Upload failed"))
+              }
+            } else {
+              reject(new Error(`Upload failed with status ${xhr.status}`))
+            }
+          }
+
+          xhr.onerror = () => reject(new Error("Network error during upload"))
+          xhr.send(formData)
+        })
+      } catch (err: any) {
+        console.error(`Failed to upload ${file.name}:`, err.message)
       }
     }
 
     setUploading(false)
+    setPerFileProgress(0)
     alert("Upload completed!")
   }
 
@@ -195,15 +227,18 @@ export default function GuestEventPage() {
             {uploading && (
               <div className="bg-stone-900 text-stone-50 p-4 rounded-xl space-y-2 animate-in fade-in zoom-in duration-300">
                 <div className="flex justify-between text-[10px] uppercase tracking-widest font-mono">
-                  <span>Uploading Images...</span>
-                  <span>{uploadProgress.current} / {uploadProgress.total}</span>
+                  <span>Uploading File {uploadProgress.current} / {uploadProgress.total}</span>
+                  <span className="text-amber-500 font-bold">{perFileProgress}%</span>
                 </div>
                 <div className="w-full bg-stone-800 h-1.5 rounded-full overflow-hidden">
                   <div 
-                    className="bg-amber-500 h-full transition-all duration-300"
-                    style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }}
+                    className="bg-amber-500 h-full transition-all duration-300 ease-out"
+                    style={{ width: `${perFileProgress}%` }}
                   />
                 </div>
+                <p className="text-[8px] text-stone-500 font-mono text-center uppercase tracking-tighter">
+                  Total Progress: {Math.round(((uploadProgress.current - 1) / uploadProgress.total) * 100 + (perFileProgress / uploadProgress.total))}%
+                </p>
               </div>
             )}
 
@@ -223,7 +258,7 @@ export default function GuestEventPage() {
                 <input 
                   type="file" 
                   multiple 
-                  accept="image/*"
+                  accept="image/*,video/*"
                   onChange={handleFileUpload}
                   disabled={uploading}
                   className="absolute inset-0 opacity-0 cursor-pointer z-10"
@@ -234,9 +269,9 @@ export default function GuestEventPage() {
                 >
                   <div className="flex items-center gap-3">
                     <Loader2 className={`w-5 h-5 ${uploading ? 'animate-spin' : ''}`} />
-                    <span className="text-lg">{uploading ? 'Uploading...' : 'Upload Images'}</span>
+                    <span className="text-lg">{uploading ? 'Uploading...' : 'Upload Media'}</span>
                   </div>
-                  <span className="text-[10px] uppercase tracking-widest text-stone-400">Max 20MB</span>
+                  <span className="text-[10px] uppercase tracking-widest text-stone-400">Max 50MB</span>
                 </Button>
               </div>
 
@@ -254,7 +289,7 @@ export default function GuestEventPage() {
 
             <div className="pt-4 text-center">
               <p className="text-[10px] text-stone-300 uppercase tracking-[0.2em]">
-                {photosCount} / {event.photo_limit} IMAGES CAPTURED
+                {photosCount} / {event.photo_limit} MEDIA CAPTURED
               </p>
             </div>
           </CardContent>
@@ -362,7 +397,7 @@ export default function GuestEventPage() {
                 onChange={(e) => setName(e.target.value)}
                 required
                 autoFocus
-                className="h-14 bg-white border-stone-200 text-lg focus-visible:ring-stone-400 rounded-xl"
+                className="h-14 bg-white border-stone-200 text-black text-lg focus-visible:ring-stone-400 rounded-xl"
               />
             </div>
 
