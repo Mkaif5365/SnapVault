@@ -195,7 +195,7 @@ export default function EventDetailPage() {
       return new Promise<boolean>((resolve) => {
         const xhr = new XMLHttpRequest()
         const formData = new FormData()
-        formData.append('media', file)
+        formData.append('file', file)
         formData.append('eventId', id as string)
         formData.append('photographerName', 'Host')
         
@@ -246,7 +246,7 @@ export default function EventDetailPage() {
       
       const formattedPhotos = newPhotos?.map(p => ({
         ...p,
-        photographer_name: (p.participants as any)?.name
+        photographer_name: (p.participants as any)?.name || 'Host'
       })) || []
       
       setPhotos(formattedPhotos)
