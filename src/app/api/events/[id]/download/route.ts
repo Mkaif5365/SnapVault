@@ -30,37 +30,58 @@ export async function GET(
       return NextResponse.json({ error: "Event not found" }, { status: 404 })
     }
 
-    // 2. Fetch all photos
-    const { data: photos } = await supabase
+    // 2. Fetch all media
+    const { data: media } = await supabase
       .from('photos')
-      .select('telegram_file_id, created_at')
+      .select('telegram_file_id, created_at, media_type, mime_type')
       .eq('event_id', eventId)
       .order('created_at', { ascending: true })
 
-    if (!photos || photos.length === 0) {
-      return NextResponse.json({ error: "No photos to download" }, { status: 404 })
+    if (!media || media.length === 0) {
+      return NextResponse.json({ error: "No media to download" }, { status: 404 })
     }
 
     // 3. Build ZIP
     const zip = new JSZip()
 
-    for (let i = 0; i < photos.length; i++) {
-      const photo = photos[i]
-      const fileNum = (i + 1).toString().padStart(2, '0')
+    // MIME to Extension Mapper
+    const getExtension = (mimeType: string | null, mediaType: string) => {
+      if (!mimeType) return mediaType === 'video' ? 'mp4' : 'jpg'
+      
+      const type = mimeType.split('/')[1]?.split('+')[0] || ''
+      const extMap: Record<string, string> = {
+        'jpeg': 'jpg',
+        'png': 'png',
+        'gif': 'gif',
+        'heic': 'heic',
+        'heif': 'heif',
+        'webp': 'webp',
+        'mp4': 'mp4',
+        'quicktime': 'mov',
+        'x-matroska': 'mkv',
+        'webm': 'webm'
+      }
+      return extMap[type] || type || (mediaType === 'video' ? 'mp4' : 'jpg')
+    }
+
+    for (let i = 0; i < media.length; i++) {
+      const item = media[i]
+      const fileNum = (i + 1).toString().padStart(3, '0')
+      const ext = getExtension(item.mime_type, item.media_type || 'photo')
 
       // Get Telegram file path
       const fileInfoRes = await fetch(
-        `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile?file_id=${photo.telegram_file_id}`
+        `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile?file_id=${item.telegram_file_id}`
       )
       const fileInfo = await fileInfoRes.json()
 
       if (fileInfo.ok && fileInfo.result?.file_path) {
-        const photoUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${fileInfo.result.file_path}`
-        const photoRes = await fetch(photoUrl)
+        const fileUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${fileInfo.result.file_path}`
+        const fileRes = await fetch(fileUrl)
 
-        if (photoRes.ok) {
-          const buffer = await photoRes.arrayBuffer()
-          zip.file(`snap_${fileNum}.jpg`, buffer)
+        if (fileRes.ok) {
+          const buffer = await fileRes.arrayBuffer()
+          zip.file(`snap_${fileNum}.${ext}`, buffer)
         }
       }
     }

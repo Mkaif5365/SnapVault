@@ -61,14 +61,30 @@ export async function GET(
     }
 
     const photoBuffer = await photoRes.arrayBuffer()
-    const contentType = photoRes.headers.get("content-type") || "image/jpeg"
+    const contentType = photo.mime_type || photoRes.headers.get("content-type") || "image/jpeg"
+    const download = request.nextUrl.searchParams.get("download")
+
+    const headers: Record<string, string> = {
+      "Content-Type": contentType,
+      "Cache-Control": "public, max-age=31536000, immutable",
+    }
+
+    if (download === "1") {
+      const extension = contentType.split("/")[1]?.split("+")[0] || "jpg"
+      const extMap: Record<string, string> = {
+        'jpeg': 'jpg',
+        'x-matroska': 'mkv',
+        'quicktime': 'mov',
+        'heic': 'heic',
+        'heif': 'heif'
+      }
+      const finalExt = extMap[extension] || extension
+      headers["Content-Disposition"] = `attachment; filename="snapvault-${fileId}.${finalExt}"`
+    }
 
     return new NextResponse(photoBuffer, {
       status: 200,
-      headers: {
-        "Content-Type": contentType,
-        "Cache-Control": "public, max-age=31536000, immutable",
-      },
+      headers
     })
   } catch (err) {
     console.error("Photo proxy error:", err)
