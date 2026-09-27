@@ -193,10 +193,12 @@ export default async function LandingPage() {
       <footer className="border-t border-white/[0.05]">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-5 py-10 sm:flex-row sm:items-center md:px-8">
           <Logo />
-          <nav aria-label="Footer" className="flex gap-6 text-sm text-ink-400">
+          <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink-400">
             <Link href="#how" className="hover:text-ink-100">How it works</Link>
             <Link href="/login" className="hover:text-ink-100">Sign in</Link>
             <Link href="/register" className="hover:text-ink-100">Create a vault</Link>
+            <Link href="/privacy" className="hover:text-ink-100">Privacy</Link>
+            <Link href="/terms" className="hover:text-ink-100">Terms</Link>
           </nav>
           <p className="text-sm text-ink-400">&copy; {new Date().getFullYear()} SnapVault</p>
         </div>

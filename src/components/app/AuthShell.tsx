@@ -1,4 +1,5 @@
 import Image from "next/image"
+import Link from "next/link"
 import { Logo } from "@/components/brand/Logo"
 
 const WALL = [
@@ -29,6 +30,11 @@ export function AuthShell({
           <p className="mt-3 text-ink-400">{subtitle}</p>
           <div className="mt-9">{children}</div>
           <div className="mt-8 text-sm text-ink-400">{footer}</div>
+          <p className="mt-10 text-xs text-ink-400">
+            By continuing you agree to the{" "}
+            <Link href="/terms" className="underline decoration-white/20 underline-offset-4 hover:text-ink-100">Terms</Link> and{" "}
+            <Link href="/privacy" className="underline decoration-white/20 underline-offset-4 hover:text-ink-100">Privacy Policy</Link>.
+          </p>
         </main>
       </div>
 
