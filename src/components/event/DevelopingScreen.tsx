@@ -1,7 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Camera, ArrowLeft } from "lucide-react"
+import { ArrowLeftIcon } from "@phosphor-icons/react"
+import { Button } from "@/components/ui/button"
+import { Logo } from "@/components/brand/Logo"
 
 interface DevelopingScreenProps {
   eventName: string
@@ -41,93 +43,77 @@ export default function DevelopingScreen({ eventName, revealTime, photosCount, p
   }, [revealTime])
 
   const progress = photoLimit > 0 ? (photosCount / photoLimit) * 100 : 0
+  const cells = [
+    { value: timeLeft.days, label: 'Days' },
+    { value: timeLeft.hours, label: 'Hours' },
+    { value: timeLeft.minutes, label: 'Min' },
+    { value: timeLeft.seconds, label: 'Sec' },
+  ]
 
   return (
-    <div className="min-h-screen bg-stone-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* Back to Hub Button */}
-      {onBack && (
-        <button 
-          onClick={onBack}
-          className="absolute top-8 left-8 flex items-center gap-1.5 p-2 text-stone-600 hover:text-stone-300 transition-colors group z-[100]"
-        >
-          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          <span className="text-[10px] uppercase tracking-widest font-medium">Back to Hub</span>
-        </button>
-      )}
+    <div className="relative flex min-h-[100dvh] flex-col items-center overflow-hidden bg-[#0d0707] px-5 py-6">
+      {/* Safelight: the only light in a darkroom */}
+      <div aria-hidden className="animate-safelight pointer-events-none absolute -top-32 left-1/2 h-[520px] w-[720px] -translate-x-1/2 bg-[radial-gradient(closest-side,rgb(229_72_77/0.28),transparent)]" />
 
-      {/* Pulsating Red Light */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-red-900/20 animate-pulse blur-3xl pointer-events-none" />
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full bg-red-800/30 animate-pulse blur-xl pointer-events-none" style={{ animationDelay: '0.5s' }} />
-      
-      {/* Small Red Indicator Light */}
-      <div className="absolute top-8 right-8">
-        <div className="w-3 h-3 rounded-full bg-red-600 animate-pulse shadow-[0_0_12px_rgba(220,38,38,0.6)]" />
+      <div className="relative flex w-full max-w-md items-center justify-between">
+        {onBack ? (
+          <Button variant="ghost" size="sm" onClick={onBack} className="-ml-2 text-[#d9b3b3] hover:bg-safelight/10 hover:text-ink-100">
+            <ArrowLeftIcon />
+            Back
+          </Button>
+        ) : <span />}
+        <span className="inline-flex items-center gap-2 text-xs text-[#d9b3b3]">
+          <span className="animate-safelight size-2 rounded-full bg-safelight shadow-[0_0_10px_rgb(229_72_77/0.8)]" />
+          Developing
+        </span>
       </div>
 
-      {/* Main Content */}
-      <div className="relative z-10 text-center space-y-10 max-w-md w-full">
-        {/* Icon */}
-        <div className="w-20 h-20 mx-auto rounded-full bg-stone-900 border-2 border-stone-800 flex items-center justify-center shadow-2xl">
-          <Camera className="w-10 h-10 text-red-500/70" />
-        </div>
+      <main className="relative my-auto w-full max-w-md py-12 text-center">
+        <h1 className="font-display text-4xl leading-[1.05] font-bold tracking-[-0.035em] break-words text-ink-100">{eventName}</h1>
+        <p className="mt-3 text-[#c9a3a3]">Your roll is in the tray. Nobody can see it yet.</p>
 
-        {/* Title */}
-        <div className="space-y-3">
-          <p className="text-[10px] uppercase tracking-[0.4em] text-red-500/60 font-mono">Vault Status</p>
-          <h1 className="text-4xl font-serif italic text-stone-200">{eventName}</h1>
-          <p className="text-stone-600 text-sm">Your media is currently hidden...</p>
-        </div>
-
-        {/* Countdown Timer */}
-        <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-6 backdrop-blur-sm">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-stone-500 mb-4 font-mono">Revealing In</p>
-          <div className="grid grid-cols-4 gap-3">
-            {[
-              { value: timeLeft.days, label: 'Days' },
-              { value: timeLeft.hours, label: 'Hours' },
-              { value: timeLeft.minutes, label: 'Min' },
-              { value: timeLeft.seconds, label: 'Sec' },
-            ].map((item) => (
-              <div key={item.label} className="text-center">
-                <div className="bg-stone-900 border border-stone-800 rounded-xl py-3 px-2 shadow-inner">
-                  <p className="text-3xl font-mono font-bold text-stone-100 tabular-nums">
-                    {item.value.toString().padStart(2, '0')}
-                  </p>
+        {/* Countdown panel, tilted toward the viewer */}
+        <div className="mt-10 [perspective:1000px]">
+          <div
+            className="rounded-[24px] border border-safelight/15 bg-[#160b0b]/90 p-5 shadow-[inset_0_1px_0_rgb(255_255_255/0.04),0_40px_60px_-30px_rgb(0_0_0/0.9)] [transform:rotateX(10deg)]"
+            role="timer"
+            aria-label="Time until reveal"
+          >
+            <p className="text-xs text-[#c9a3a3]">Reveals in</p>
+            <div className="mt-4 grid grid-cols-4 gap-2">
+              {cells.map((item) => (
+                <div key={item.label}>
+                  <div className="rounded-xl bg-[#0d0707] py-4 shadow-[inset_0_2px_8px_rgb(0_0_0/0.7)] ring-1 ring-white/[0.04]">
+                    <p className="tabular font-mono text-3xl font-semibold text-ink-100">
+                      {item.value.toString().padStart(2, '0')}
+                    </p>
+                  </div>
+                  <p className="mt-2 text-[11px] text-[#c9a3a3]">{item.label}</p>
                 </div>
-                <p className="text-[9px] uppercase tracking-widest text-stone-600 mt-2 font-mono">{item.label}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Live Roll Progress */}
-        <div className="bg-stone-900/30 border border-stone-800/50 rounded-2xl p-5 space-y-3">
-          <div className="flex items-center justify-between text-xs font-mono">
-            <span className="text-stone-500 uppercase tracking-wider">Vault Progress</span>
-            <span className="text-red-500/80">{photosCount} / {photoLimit}</span>
+        <div className="mt-8 text-left">
+          <div className="flex items-baseline justify-between text-sm">
+            <span className="text-[#c9a3a3]">Shots on the roll</span>
+            <span className="tabular font-mono text-ink-100">{photosCount} / {photoLimit}</span>
           </div>
-          <div className="w-full bg-stone-900 h-2 rounded-full overflow-hidden border border-stone-800">
-            <div
-              className="h-full bg-gradient-to-r from-red-900 to-red-600 rounded-full transition-all duration-1000"
-              style={{ width: `${Math.min(100, progress)}%` }}
-            />
+          <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/[0.06]">
+            <div className="h-full rounded-full bg-safelight transition-[width] duration-1000" style={{ width: `${Math.min(100, progress)}%` }} />
           </div>
-          <p className="text-stone-700 text-[10px] italic text-center">
-            {photosCount === 0 
-              ? "No media captured yet." 
-              : photosCount >= photoLimit 
-                ? "Vault is full!" 
-                : `${photoLimit - photosCount} slots remaining.`}
+          <p className="mt-2 text-xs text-[#c9a3a3]">
+            {photosCount === 0
+              ? "No shots yet. Be the first."
+              : photosCount >= photoLimit
+                ? "The roll is full."
+                : `${photoLimit - photosCount} shots left for everyone.`}
           </p>
         </div>
-      </div>
+      </main>
 
-      {/* Footer */}
-      <footer className="absolute bottom-6 text-center">
-        <p className="text-[9px] text-stone-800 tracking-[0.4em] uppercase font-mono">
-          SnapVault // Premium
-        </p>
-      </footer>
+      <Logo href={null} className="relative opacity-60" markClassName="size-6" />
     </div>
   )
 }

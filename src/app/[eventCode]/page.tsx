@@ -5,8 +5,9 @@ import { useParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Camera, Loader2, ArrowRight, Image as ImageIcon } from "lucide-react"
+import { ArrowRightIcon, CameraIcon, ImagesIcon, LockIcon, SpinnerGapIcon, UploadSimpleIcon } from "@phosphor-icons/react"
+import { Logo, LogoMark } from "@/components/brand/Logo"
+import { StatusBadge } from "@/components/app/StatusBadge"
 import DevelopingScreen from "@/components/event/DevelopingScreen"
 import GalleryGrid from "@/components/event/GalleryGrid"
 
@@ -206,104 +207,109 @@ export default function GuestEventPage() {
 
   // HUB STATE
   if (pageState === 'hub' && event && participant) {
+    const usedPct = event.photo_limit > 0 ? Math.min(100, (photosCount / event.photo_limit) * 100) : 0
+    const totalPct = uploadProgress.total > 0
+      ? Math.round(((uploadProgress.current - 1) / uploadProgress.total) * 100 + (perFileProgress / uploadProgress.total))
+      : 0
+
     return (
-      <div className="min-h-screen bg-stone-900 flex flex-col items-center justify-center p-6 antialiased">
-        <Card className="w-full max-w-md bg-stone-50 border-none shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-4 bg-black flex justify-around items-center px-4">
-            {[...Array(10)].map((_, i) => (
-              <div key={i} className="w-1.5 h-1.5 bg-stone-800 rounded-sm" />
-            ))}
+      <GuestFrame>
+        <div className="flex items-center justify-between">
+          <Logo href={null} />
+          <span className="inline-flex h-8 items-center gap-2 rounded-full bg-white/[0.05] pr-3 pl-1 text-sm text-ink-200">
+            <span className="grid size-6 place-items-center rounded-full bg-ink-700 text-xs font-semibold">
+              {participant.name?.charAt(0)?.toUpperCase()}
+            </span>
+            {participant.name}
+          </span>
+        </div>
+
+        <div className="mt-12">
+          <StatusBadge status="developing" />
+          <h1 className="mt-4 font-display text-4xl leading-[1.05] font-bold tracking-[-0.035em] break-words text-ink-100">
+            {event.name}
+          </h1>
+          <p className="mt-3 text-ink-400">Every shot stays hidden until the reveal. Make them count.</p>
+        </div>
+
+        <div className="mt-8 space-y-3">
+          <Button
+            onClick={() => router.push(`/${eventCode}/camera`)}
+            size="xl"
+            className="group h-20 w-full justify-between rounded-[20px] px-6 text-lg"
+          >
+            <span className="flex items-center gap-3">
+              <CameraIcon weight="fill" className="size-6" />
+              Open camera
+            </span>
+            <ArrowRightIcon weight="bold" className="size-5 transition-transform group-hover:translate-x-1" />
+          </Button>
+
+          <div className="relative">
+            <input
+              type="file"
+              multiple
+              accept="image/*,video/*"
+              onChange={handleFileUpload}
+              disabled={uploading}
+              aria-label="Upload photos or videos"
+              className="absolute inset-0 z-10 cursor-pointer opacity-0 disabled:cursor-not-allowed"
+            />
+            <div className="surface flex h-16 items-center justify-between px-5">
+              <span className="flex items-center gap-3 text-ink-100">
+                {uploading ? <SpinnerGapIcon className="size-5 animate-spin text-flare-400" /> : <UploadSimpleIcon className="size-5 text-ink-300" />}
+                <span className="font-medium">{uploading ? 'Uploading...' : 'Upload from your phone'}</span>
+              </span>
+              <span className="text-xs text-ink-400">Max 50MB each</span>
+            </div>
           </div>
 
-          <CardHeader className="pt-10 pb-6 text-center">
-            <p className="text-[10px] uppercase tracking-[0.4em] text-stone-400 font-mono mb-2">Guest Hub</p>
-            <CardTitle className="text-3xl font-serif italic text-stone-900">{event.name}</CardTitle>
-            <CardDescription className="text-stone-500 mt-1">
-              Welcome, <span className="text-stone-900 font-semibold">{participant.name}</span>
-            </CardDescription>
-          </CardHeader>
+          <Button
+            variant="ghost"
+            onClick={() => setPageState('developing')}
+            className="h-14 w-full justify-between rounded-[20px] px-5 text-base"
+          >
+            <span className="flex items-center gap-3">
+              <ImagesIcon className="size-5" />
+              See the vault
+            </span>
+            <ArrowRightIcon className="size-4" />
+          </Button>
+        </div>
 
-          <CardContent className="space-y-4 pb-10">
-            {uploading && (
-              <div className="bg-stone-900 text-stone-50 p-4 rounded-xl space-y-2 animate-in fade-in zoom-in duration-300">
-                <div className="flex justify-between text-[10px] uppercase tracking-widest font-mono">
-                  <span>Uploading File {uploadProgress.current} / {uploadProgress.total}</span>
-                  <span className="text-amber-500 font-bold">{perFileProgress}%</span>
-                </div>
-                <div className="w-full bg-stone-800 h-1.5 rounded-full overflow-hidden">
-                  <div 
-                    className="bg-amber-500 h-full transition-all duration-300 ease-out"
-                    style={{ width: `${perFileProgress}%` }}
-                  />
-                </div>
-                <p className="text-[8px] text-stone-500 font-mono text-center uppercase tracking-tighter">
-                  Total Progress: {Math.round(((uploadProgress.current - 1) / uploadProgress.total) * 100 + (perFileProgress / uploadProgress.total))}%
-                </p>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 gap-3">
-              <Button 
-                onClick={() => router.push(`/${eventCode}/camera`)}
-                className="h-16 bg-stone-900 text-stone-50 hover:bg-stone-800 rounded-xl flex items-center justify-between px-6 group"
-              >
-                <div className="flex items-center gap-3">
-                  <Camera className="w-5 h-5" />
-                  <span className="text-lg">Open Camera</span>
-                </div>
-                <ArrowRight className="w-5 h-5 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
-              </Button>
-
-              <div className="relative">
-                <input 
-                  type="file" 
-                  multiple 
-                  accept="image/*,video/*"
-                  onChange={handleFileUpload}
-                  disabled={uploading}
-                  className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                />
-                <Button 
-                  variant="outline"
-                  className="w-full h-16 border-2 border-stone-200 text-stone-700 hover:bg-stone-50 rounded-xl flex items-center justify-between px-6"
-                >
-                  <div className="flex items-center gap-3">
-                    <Loader2 className={`w-5 h-5 ${uploading ? 'animate-spin' : ''}`} />
-                    <span className="text-lg">{uploading ? 'Uploading...' : 'Upload Media'}</span>
-                  </div>
-                  <span className="text-[10px] uppercase tracking-widest text-stone-400">Max 50MB</span>
-                </Button>
-              </div>
-
-              <Button 
-                variant="ghost"
-                onClick={() => setPageState('developing')}
-                className="h-16 text-stone-500 hover:text-stone-900 hover:bg-stone-100 rounded-xl flex items-center justify-between px-6"
-              >
-                <div className="flex items-center gap-3">
-                  <ImageIcon className="w-5 h-5" />
-                  <span className="text-lg">View Gallery</span>
-                </div>
-              </Button>
+        {uploading && (
+          <div className="surface mt-4 p-5" role="status" aria-live="polite">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-ink-200">File {uploadProgress.current} of {uploadProgress.total}</span>
+              <span className="tabular font-mono text-flare-400">{perFileProgress}%</span>
             </div>
-
-            <div className="pt-4 text-center">
-              <p className="text-[10px] text-stone-300 uppercase tracking-[0.2em]">
-                {photosCount} / {event.photo_limit} MEDIA CAPTURED
-              </p>
+            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-ink-950">
+              <div className="h-full rounded-full bg-flare-500 transition-[width] duration-300 ease-out" style={{ width: `${perFileProgress}%` }} />
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <p className="mt-2 text-xs text-ink-400">Overall {totalPct}%</p>
+          </div>
+        )}
+
+        <div className="mt-auto pt-12">
+          <div className="flex items-baseline justify-between text-sm">
+            <span className="text-ink-400">Shots on the roll</span>
+            <span className="tabular font-mono text-ink-100">{photosCount} / {event.photo_limit}</span>
+          </div>
+          <div className="mt-2 h-1 overflow-hidden rounded-full bg-ink-800">
+            <div className="h-full rounded-full bg-ink-300" style={{ width: `${usedPct}%` }} />
+          </div>
+        </div>
+      </GuestFrame>
     )
   }
 
   // LOADING STATE
   if (pageState === 'loading') {
     return (
-      <div className="min-h-screen bg-stone-900 flex items-center justify-center p-6">
-        <div className="text-stone-500 font-serif italic text-xl animate-pulse">
-          Opening Lens...
+      <div className="grid min-h-[100dvh] place-items-center p-6" aria-busy="true">
+        <div className="flex flex-col items-center gap-4">
+          <LogoMark className="size-12 animate-pulse" />
+          <p className="text-sm text-ink-400">Opening the vault</p>
         </div>
       </div>
     )
@@ -312,16 +318,18 @@ export default function GuestEventPage() {
   // LOCKED STATE
   if (pageState === 'locked' && event) {
     return (
-      <div className="min-h-screen bg-stone-900 flex items-center justify-center p-6">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 mx-auto rounded-full bg-stone-800 flex items-center justify-center">
-            <span className="text-3xl">🔒</span>
-          </div>
-          <h2 className="text-2xl font-serif italic text-stone-200">{event.name}</h2>
-          <p className="text-stone-500">This vault has been locked by the host.</p>
-          <p className="text-stone-600 text-sm">No new participants can join at this time.</p>
+      <GuestFrame>
+        <Logo href={null} />
+        <div className="my-auto py-16 text-center">
+          <span className="mx-auto grid size-16 place-items-center rounded-[20px] bg-ink-800 text-ink-200 shadow-[inset_0_1px_0_rgb(255_255_255/0.06)]">
+            <LockIcon className="size-7" />
+          </span>
+          <h1 className="mt-6 font-display text-3xl font-bold tracking-[-0.03em] break-words text-ink-100">{event.name}</h1>
+          <p className="mx-auto mt-3 max-w-[32ch] text-ink-400">
+            The host has closed entry to this vault. No new guests can join right now.
+          </p>
         </div>
-      </div>
+      </GuestFrame>
     )
   }
 
@@ -341,20 +349,23 @@ export default function GuestEventPage() {
   // REVEALED STATE (Gallery)
   if (pageState === 'revealed' && event) {
     return (
-      <div className="min-h-screen bg-stone-100 p-4 md:p-8 font-sans">
-        <div className="max-w-5xl mx-auto space-y-8">
-          <header className="text-center space-y-3 py-8">
-            <p className="text-[10px] uppercase tracking-[0.4em] text-stone-400 font-mono">Vault Revealed</p>
-            <h1 className="text-5xl font-serif italic text-stone-900">{event.name}</h1>
-            <p className="text-stone-500 text-sm">
-              {photos.length} photos — captured by {event.description || 'your crew'}
+      <div className="min-h-[100dvh]">
+        <div className="mx-auto max-w-6xl px-4 py-6 md:px-8">
+          <Logo href="/" />
+          <header className="py-12 md:py-16">
+            <StatusBadge status="revealed" />
+            <h1 className="mt-4 font-display text-4xl leading-[1.02] font-bold tracking-[-0.04em] break-words text-ink-100 md:text-6xl">
+              {event.name}
+            </h1>
+            <p className="mt-4 max-w-[56ch] text-lg text-ink-400">
+              {photos.length} {photos.length === 1 ? 'shot' : 'shots'}, developed for everyone at once.
+              {event.description ? ` ${event.description}` : ''}
             </p>
           </header>
           <GalleryGrid photos={photos} isRevealing={isRevealing} />
-          <footer className="text-center py-8">
-            <p className="text-[9px] text-stone-400 tracking-[0.4em] uppercase font-mono">
-              SnapVault // Revealed
-            </p>
+          <footer className="flex items-center justify-between border-t border-white/[0.06] py-10 mt-16 text-sm text-ink-400">
+            <span>Tap any shot to view or download it.</span>
+            <span>Made with SnapVault</span>
           </footer>
         </div>
       </div>
@@ -363,68 +374,78 @@ export default function GuestEventPage() {
 
   // JOIN STATE (Default)
   return (
-    <div className="min-h-screen bg-stone-900 flex flex-col items-center justify-center p-6 antialiased">
-      <Card className="w-full max-w-md bg-stone-50 border-none shadow-2xl relative overflow-hidden">
-        {/* Film strip decoration */}
-        <div className="absolute top-0 left-0 w-full h-4 bg-black flex justify-around items-center px-4">
-          {[...Array(10)].map((_, i) => (
-            <div key={i} className="w-1.5 h-1.5 bg-stone-800 rounded-sm" />
+    <GuestFrame>
+      <Logo href={null} />
+
+      <div className="my-auto py-10">
+        {/* Unexposed prints: the roll is waiting */}
+        <div aria-hidden className="relative mx-auto h-44 w-full max-w-[280px] [perspective:900px]">
+          {[-12, 2, 14].map((r, i) => (
+            <div
+              key={r}
+              className="print absolute top-1/2 left-1/2 w-28"
+              style={{ transform: `translate(-50%, -50%) translateX(${(i - 1) * 58}px) rotateX(14deg) rotateY(-16deg) rotateZ(${r}deg) translateZ(${i * 18}px)` }}
+            >
+              <div className="flex aspect-[4/5] items-end justify-end rounded-[2px] bg-gradient-to-br from-ink-800 to-ink-950 p-1.5">
+                <span className="stamp text-[9px] opacity-70">&apos;-- -- --</span>
+              </div>
+            </div>
           ))}
         </div>
 
-        <CardHeader className="pt-10 pb-6 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-full bg-stone-900 flex items-center justify-center text-stone-50 shadow-lg overflow-hidden">
-              <img src="/logo.png" alt="SnapVault" className="w-12 h-12 object-contain" />
-            </div>
+        <p className="mt-10 text-center text-sm text-ink-400">You&apos;re invited to</p>
+        <h1 className="mt-2 text-center font-display text-4xl leading-[1.05] font-bold tracking-[-0.035em] break-words text-ink-100">
+          {event?.name}
+        </h1>
+
+        <form onSubmit={handleJoin} className="mt-10 space-y-5">
+          <div className="grid gap-2">
+            <label htmlFor="name" className="text-[13px] font-medium text-ink-200">Your name</label>
+            <Input
+              id="name"
+              placeholder="e.g. Aunt Priya"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              autoFocus
+              autoComplete="given-name"
+              aria-describedby="name-help"
+              className="h-12 text-base"
+            />
+            <p id="name-help" className="text-[13px] text-ink-400">It goes on every photo you take.</p>
           </div>
-          <CardTitle className="text-4xl font-serif italic text-stone-900">SnapVault</CardTitle>
-          <CardDescription className="text-stone-500 mt-2">
-            You've been invited to <span className="text-stone-900 font-semibold italic">"{event?.name}"</span>
-          </CardDescription>
-        </CardHeader>
 
-        <CardContent className="pb-10">
-          <form onSubmit={handleJoin} className="space-y-6">
-            <div className="space-y-2">
-              <label htmlFor="name" className="text-xs uppercase tracking-widest text-stone-400 font-bold ml-1">
-                Your Calling Name
-              </label>
-              <Input
-                id="name"
-                placeholder="How should we label your photos?"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                autoFocus
-                className="h-14 bg-white border-stone-200 text-black text-lg focus-visible:ring-stone-400 rounded-xl"
-              />
-            </div>
+          <Button
+            type="submit"
+            size="xl"
+            disabled={joining || !name.trim()}
+            className="group w-full"
+          >
+            {joining ? (
+              <SpinnerGapIcon className="size-5 animate-spin" />
+            ) : (
+              <>
+                Join the vault
+                <ArrowRightIcon weight="bold" className="size-5 transition-transform group-hover:translate-x-0.5" />
+              </>
+            )}
+          </Button>
+        </form>
+      </div>
 
-            <Button
-              type="submit"
-              disabled={joining || !name.trim()}
-              className="w-full h-14 bg-stone-900 text-stone-50 hover:bg-stone-800 rounded-xl text-lg font-medium group transition-all"
-            >
-              {joining ? (
-                <Loader2 className="w-6 h-6 animate-spin" />
-              ) : (
-                <span className="flex items-center gap-2">
-                  Enter Event <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </span>
-              )}
-            </Button>
-          </form>
+      <p className="text-center text-xs text-ink-400">Nobody sees the photos until the host&apos;s reveal time.</p>
+    </GuestFrame>
+  )
+}
 
-          <p className="mt-8 text-center text-[10px] text-stone-300 uppercase tracking-[0.2em]">
-            SnapVault Premium
-          </p>
-        </CardContent>
-      </Card>
-
-      <footer className="mt-8 text-stone-600 text-xs italic font-serif">
-        &copy; SnapVault AI
-      </footer>
+/** Narrow, phone-first frame shared by the guest screens. */
+function GuestFrame({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="relative min-h-[100dvh] overflow-hidden">
+      <div aria-hidden className="pointer-events-none absolute -top-40 left-1/2 h-[480px] w-[640px] -translate-x-1/2 bg-[radial-gradient(closest-side,rgb(236_106_46/0.12),transparent)]" />
+      <main className="relative mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-5 py-6">
+        {children}
+      </main>
     </div>
   )
 }

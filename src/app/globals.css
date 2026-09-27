@@ -4,31 +4,55 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+  SnapVault design tokens.
+  One theme (dark, "darkroom"), one accent (film-leader orange, taken from the
+  camera's date stamp), one neutral family (ink). Radius rule: interactive
+  controls are full pills, inputs are 12px, surfaces are 20px.
+*/
 @theme {
+  --color-ink-950: #0b0b0c;
+  --color-ink-900: #121214;
+  --color-ink-850: #17171a;
+  --color-ink-800: #1e1e22;
+  --color-ink-700: #2a2a2f;
+  --color-ink-600: #3a3a41;
+  --color-ink-500: #5e5e66;
+  --color-ink-400: #8e8e97;
+  --color-ink-300: #b6b6be;
+  --color-ink-200: #d7d7dd;
+  --color-ink-100: #ededf0;
+
+  --color-flare-300: #f7a57c;
+  --color-flare-400: #f2834d;
+  --color-flare-500: #ec6a2e;
+  --color-flare-600: #d2561d;
+  --color-flare-950: #2a150b;
+
+  --color-safelight: #e5484d;
+  --color-developed: #4cc38a;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-display: var(--font-display-face), var(--font-geist-sans), ui-sans-serif, sans-serif;
+
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
-
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
-
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
-
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
-
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
 
@@ -36,32 +60,46 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
 
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
 
   @keyframes accordion-down {
-    from {
-      height: 0;
-    }
-    to {
-      height: var(--radix-accordion-content-height);
-    }
+    from { height: 0; }
+    to { height: var(--radix-accordion-content-height); }
   }
   @keyframes accordion-up {
-    from {
-      height: var(--radix-accordion-content-height);
-    }
-    to {
-      height: 0;
-    }
+    from { height: var(--radix-accordion-content-height); }
+    to { height: 0; }
   }
 }
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these lines for compatibility.
-*/
 @layer base {
+  :root {
+    color-scheme: dark;
+    --background: var(--color-ink-950);
+    --foreground: var(--color-ink-100);
+    --card: var(--color-ink-900);
+    --card-foreground: var(--color-ink-100);
+    --popover: var(--color-ink-900);
+    --popover-foreground: var(--color-ink-100);
+    --primary: var(--color-flare-500);
+    --primary-foreground: var(--color-ink-950);
+    --secondary: var(--color-ink-800);
+    --secondary-foreground: var(--color-ink-100);
+    --muted: var(--color-ink-800);
+    --muted-foreground: var(--color-ink-400);
+    --accent: var(--color-ink-800);
+    --accent-foreground: var(--color-ink-100);
+    --destructive: var(--color-safelight);
+    --destructive-foreground: var(--color-ink-100);
+    --border: rgb(255 255 255 / 0.08);
+    --input: rgb(255 255 255 / 0.1);
+    --ring: var(--color-flare-500);
+    --radius: 0.75rem;
+  }
+
   *,
   ::after,
   ::before,
@@ -69,65 +107,103 @@
   ::file-selector-button {
     border-color: var(--border, currentColor);
   }
-}
 
-@layer base {
-  :root {
-    --background: var(--color-stone-950);
-    --foreground: var(--color-stone-100);
-    --card: var(--color-stone-900);
-    --card-foreground: var(--color-stone-100);
-    --popover: var(--color-stone-950);
-    --popover-foreground: var(--color-stone-100);
-    --primary: var(--color-stone-100);
-    --primary-foreground: var(--color-stone-950);
-    --secondary: var(--color-stone-800);
-    --secondary-foreground: var(--color-stone-100);
-    --muted: var(--color-stone-800);
-    --muted-foreground: var(--color-stone-400);
-    --accent: var(--color-stone-800);
-    --accent-foreground: var(--color-stone-100);
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: var(--color-stone-800);
-    --input: var(--color-stone-800);
-    --ring: var(--color-stone-400);
-    --radius: 0.75rem;
+  html {
+    scroll-behavior: smooth;
   }
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  h1, h2, h3, h4 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background: rgb(236 106 46 / 0.35);
+    color: var(--color-ink-100);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-flare-500);
+    outline-offset: 2px;
   }
 }
 
-/* SnapVault: Dramatic photo reveal animation */
+/* Film grain: a single fixed, non-interactive layer so scrolling never repaints it. */
+.grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@layer components {
+  /* Raised surface: soft top highlight + tinted drop shadow, one light source (top). */
+  .surface {
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.035), rgb(255 255 255 / 0) 40%), var(--color-ink-900);
+    border: 1px solid rgb(255 255 255 / 0.07);
+    border-radius: 20px;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.05),
+      0 1px 2px rgb(0 0 0 / 0.4),
+      0 24px 48px -24px rgb(0 0 0 / 0.6);
+  }
+
+  /* Glass bar (web approximation of frosted glass, not Apple Liquid Glass). */
+  .glass {
+    background: rgb(18 18 20 / 0.62);
+    border: 1px solid rgb(255 255 255 / 0.08);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 12px 40px -12px rgb(0 0 0 / 0.7);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+  }
+
+  /* A physical photo print: paper border, slight sheen, deep shadow. */
+  .print {
+    background: #f4f2ee;
+    padding: 6%;
+    padding-bottom: 7%;
+    border-radius: 6px;
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.5) inset,
+      0 2px 4px rgb(0 0 0 / 0.25),
+      0 30px 60px -20px rgb(0 0 0 / 0.75);
+  }
+
+  .stamp {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: #ff6a1a;
+    text-shadow: 0 0 6px rgb(255 106 26 / 0.45);
+    letter-spacing: 0.02em;
+  }
+
+  .sprockets {
+    background-image: radial-gradient(circle at center, var(--color-ink-950) 0 3px, transparent 3.5px);
+    background-size: 18px 10px;
+    background-repeat: repeat-x;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    background: var(--color-ink-900);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* SnapVault photo reveal: the gallery "develops" (blur + underexposure to sharp). */
 @keyframes photo-reveal {
   0% {
     filter: blur(20px) brightness(0.3);
@@ -151,7 +227,26 @@
 }
 
 .animate-reveal {
-  animation: photo-reveal 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation: photo-reveal 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes safelight {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+.animate-safelight {
+  animation: safelight 3.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-reveal,
+  .animate-safelight {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 @layer utilities {
@@ -162,10 +257,20 @@
     background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(120, 113, 108, 0.2);
+    background: rgb(255 255 255 / 0.1);
     border-radius: 20px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(245, 158, 11, 0.3);
+    background: rgb(236 106 46 / 0.4);
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@utility scrollbar-hide {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
   }
 }

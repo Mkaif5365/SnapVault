@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { X, ChevronLeft, ChevronRight, Play, Video as VideoIcon, ImageIcon, Download, Trash } from "lucide-react"
+import { CaretLeftIcon, CaretRightIcon, DownloadSimpleIcon, PlayIcon, TrashIcon, VideoCameraIcon, XIcon } from "@phosphor-icons/react"
 
 interface Photo {
   id: string
@@ -77,8 +77,9 @@ export default function GalleryGrid({ photos, isRevealing, showPhotographer = tr
 
   if (photos.length === 0) {
     return (
-      <div className="text-center py-20">
-        <p className="text-stone-500 font-serif italic text-lg">No photos were captured for this vault.</p>
+      <div className="surface py-20 text-center">
+        <p className="font-display text-xl font-semibold text-ink-100">The roll came back empty.</p>
+        <p className="mt-2 text-sm text-ink-400">No photos were taken in this vault.</p>
       </div>
     )
   }
@@ -86,7 +87,7 @@ export default function GalleryGrid({ photos, isRevealing, showPhotographer = tr
   return (
     <>
       {/* Gallery Grid */}
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4">
       {photos.map((photo, index) => (
         <GalleryItem 
           key={photo.id} 
@@ -104,17 +105,17 @@ export default function GalleryGrid({ photos, isRevealing, showPhotographer = tr
       {/* Lightbox */}
       {lightboxIndex !== null && (
         <div 
-          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center animate-in fade-in duration-300 touch-none" 
+          role="dialog" aria-modal="true" aria-label="Media viewer" className="fixed inset-0 z-50 flex touch-none items-center justify-center backdrop-blur-sm animate-in fade-in duration-300" 
           onClick={closeLightbox}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
           style={{ 
-            backgroundColor: `rgba(0, 0, 0, ${Math.max(0.7, 0.95 - translateY / 1000)})`
+            backgroundColor: `rgba(11, 11, 12, ${Math.max(0.7, 0.95 - translateY / 1000)})`
           }}
         >
           <div 
-            className="absolute top-4 right-4 z-50 flex items-center gap-2"
+            className="absolute top-4 right-4 z-50 flex items-center gap-1.5"
             style={{ opacity: Math.max(0, 1 - translateY / 100) }}
           >
             {showDelete && onDelete && (
@@ -126,43 +127,48 @@ export default function GalleryGrid({ photos, isRevealing, showPhotographer = tr
                     closeLightbox()
                   }
                 }}
-                className="p-2 text-red-400 hover:text-red-500 transition-colors mr-2"
-                title="Delete Media"
+                className="grid size-11 place-items-center rounded-full bg-safelight/15 text-[#ff9ea1] transition-colors hover:bg-safelight/25"
+                title="Delete media"
+                aria-label="Delete media"
               >
-                <Trash className="w-6 h-6" />
+                <TrashIcon className="size-5" />
               </button>
             )}
             <a
               href={`/api/photos/${photos[lightboxIndex].telegram_file_id}?download=1`}
-              className="p-2 text-stone-400 hover:text-white transition-colors"
+              className="grid size-11 place-items-center rounded-full bg-white/[0.08] text-ink-100 transition-colors hover:bg-white/[0.14]"
               onClick={(e) => e.stopPropagation()}
-              title="Download Media"
+              title="Download"
+              aria-label="Download"
             >
-              <Download className="w-6 h-6" />
+              <DownloadSimpleIcon className="size-5" />
             </a>
             <button
               onClick={(e) => { e.stopPropagation(); closeLightbox() }}
-              className="p-2 text-stone-400 hover:text-white transition-colors"
+              className="grid size-11 place-items-center rounded-full bg-white/[0.08] text-ink-100 transition-colors hover:bg-white/[0.14]"
+              aria-label="Close"
             >
-              <X className="w-8 h-8" />
+              <XIcon className="size-5" />
             </button>
           </div>
 
           {lightboxIndex > 0 && (
             <button
               onClick={(e) => { e.stopPropagation(); goPrev() }}
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-50 p-2 text-stone-400 hover:text-white transition-colors"
+              className="absolute top-1/2 left-4 z-50 hidden size-12 -translate-y-1/2 place-items-center rounded-full bg-white/[0.08] text-ink-100 transition-colors hover:bg-white/[0.14] sm:grid"
+              aria-label="Previous"
             >
-              <ChevronLeft className="w-10 h-10" />
+              <CaretLeftIcon className="size-6" />
             </button>
           )}
 
           {lightboxIndex < photos.length - 1 && (
             <button
               onClick={(e) => { e.stopPropagation(); goNext() }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-50 p-2 text-stone-400 hover:text-white transition-colors"
+              className="absolute top-1/2 right-4 z-50 hidden size-12 -translate-y-1/2 place-items-center rounded-full bg-white/[0.08] text-ink-100 transition-colors hover:bg-white/[0.14] sm:grid"
+              aria-label="Next"
             >
-              <ChevronRight className="w-10 h-10" />
+              <CaretRightIcon className="size-6" />
             </button>
           )}
 
@@ -176,7 +182,7 @@ export default function GalleryGrid({ photos, isRevealing, showPhotographer = tr
             {photos[lightboxIndex].media_type === 'video' ? (
               <video
                 src={`/api/photos/${photos[lightboxIndex].telegram_file_id}`}
-                className="max-w-full max-h-[80vh] rounded-lg shadow-2xl border border-white/10"
+                className="max-h-[80vh] max-w-full rounded-[14px] shadow-2xl ring-1 ring-white/10"
                 controls
                 autoPlay
                 playsInline
@@ -185,10 +191,10 @@ export default function GalleryGrid({ photos, isRevealing, showPhotographer = tr
               <img
                 src={`/api/photos/${photos[lightboxIndex].telegram_file_id}`}
                 alt={`Photo ${lightboxIndex + 1}`}
-                className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+                className="max-h-[85vh] max-w-full rounded-[14px] object-contain shadow-2xl"
               />
             )}
-            <p className="text-center text-stone-500 text-xs font-mono mt-3">
+            <p className="tabular mt-3 text-center font-mono text-xs text-ink-400">
               {photos[lightboxIndex].media_type === 'video' ? 'Video' : 'Image'} #{(lightboxIndex + 1).toString().padStart(2, '0')} of {photos.length}
             </p>
           </div>
@@ -223,7 +229,7 @@ function GalleryItem({ photo, index, isRevealing, showPhotographer, showDelete, 
     <button
       ref={itemRef}
       onClick={onClick}
-      className={`relative aspect-square overflow-hidden rounded-lg border border-stone-800/50 bg-stone-900 group cursor-pointer transition-all duration-700 ${
+      className={`group relative aspect-square cursor-pointer overflow-hidden rounded-[14px] bg-ink-900 ring-1 ring-white/[0.06] transition-[box-shadow] duration-300 outline-none hover:ring-white/15 focus-visible:ring-2 focus-visible:ring-flare-500 ${
         isRevealing ? 'animate-reveal' : isVisible ? 'animate-in fade-in slide-in-from-bottom-2 duration-1000 fill-mode-both' : 'opacity-0'
       }`}
       style={{
@@ -236,14 +242,14 @@ function GalleryItem({ photo, index, isRevealing, showPhotographer, showDelete, 
             <div className="relative w-full h-full flex items-center justify-center">
               <video
                 src={`/api/photos/${photo.telegram_file_id}#t=0.1`}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                className="h-full w-full object-cover transition-transform duration-700 ease-out-expo group-hover:scale-105"
                 muted
                 playsInline
                 preload="metadata"
               />
-              <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
-                <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
-                  <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+              <div className="absolute inset-0 flex items-center justify-center bg-ink-950/20 transition-colors group-hover:bg-ink-950/40">
+                <div className="glass grid size-11 place-items-center rounded-full">
+                  <PlayIcon weight="fill" className="ml-0.5 size-5 text-ink-100" />
                 </div>
               </div>
             </div>
@@ -251,14 +257,14 @@ function GalleryItem({ photo, index, isRevealing, showPhotographer, showDelete, 
             <img
               src={`/api/photos/${photo.telegram_file_id}`}
               alt={`Photo ${index + 1}`}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              className="h-full w-full object-cover transition-transform duration-700 ease-out-expo group-hover:scale-105"
               loading="lazy"
             />
           )}
           
           {/* Photographer Name Overlay */}
           {showPhotographer && photo.photographer_name && (
-            <div className="absolute top-1.5 left-1.5 bg-black/70 backdrop-blur-md text-[8px] text-white font-semibold px-2 py-0.5 rounded shadow-lg border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink-950/90 to-transparent px-2.5 pt-6 pb-2 text-left text-[11px] font-medium text-ink-100 opacity-0 transition-opacity group-hover:opacity-100">
               {photo.photographer_name}
             </div>
           )}
@@ -267,44 +273,32 @@ function GalleryItem({ photo, index, isRevealing, showPhotographer, showDelete, 
           {showDelete && onDelete && (
             <div 
               onClick={(e) => { e.stopPropagation(); onDelete(photo.id) }}
-              className="absolute top-1.5 left-1.5 z-10 bg-red-500/90 backdrop-blur-md p-1.5 rounded-lg shadow-lg border border-red-400/20 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-600 hover:scale-110 active:scale-95 cursor-pointer"
-              title="Delete Media"
+              className="absolute right-2 bottom-2 z-10 grid size-8 cursor-pointer place-items-center rounded-full bg-safelight/90 text-ink-100 opacity-0 shadow-lg transition-[opacity,transform] group-hover:opacity-100 hover:scale-105 active:scale-95"
+              title="Delete media"
             >
-              <Trash className="w-3.5 h-3.5 text-white" />
+              <TrashIcon className="size-4" />
             </div>
           )}
           
           {/* Download Shortcut (Desktop) */}
           <a
             href={`/api/photos/${photo.telegram_file_id}?download=1`}
-            className="absolute bottom-1.5 left-1.5 bg-white/20 backdrop-blur-md p-1.5 rounded-lg shadow-lg border border-white/10 opacity-0 group-hover:opacity-100 transition-all hover:bg-white/40 active:scale-90 hidden sm:flex"
+            className="glass absolute top-2 right-2 z-10 hidden size-8 place-items-center rounded-full text-ink-100 opacity-0 transition-opacity group-hover:opacity-100 sm:grid"
             onClick={(e) => e.stopPropagation()}
-            title="Download Original"
+            title="Download original"
           >
-            <Download className="w-3.5 h-3.5 text-white" />
+            <DownloadSimpleIcon className="size-4" />
           </a>
 
-          {/* Media Type Badge */}
-          <div className="absolute top-1.5 right-1.5 bg-black/70 backdrop-blur-md p-1.5 rounded-lg shadow-lg border border-white/10 flex items-center gap-1.5">
-            {photo.media_type === 'video' ? (
-              <>
-                <VideoIcon className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-[7px] font-bold text-amber-400 uppercase tracking-tighter">Video</span>
-              </>
-            ) : (
-              <>
-                <ImageIcon className="w-3.5 h-3.5 text-stone-300" />
-                <span className="text-[7px] font-bold text-stone-300 uppercase tracking-tighter">Photo</span>
-              </>
-            )}
-          </div>
-
-          <div className="absolute bottom-1.5 right-1.5 bg-black/60 backdrop-blur-sm text-[8px] text-stone-200 font-mono px-2 py-0.5 rounded border border-white/5 shadow-sm">
-            #{(index + 1).toString().padStart(2, '0')}
-          </div>
+          {/* Video marker only; photos need no label */}
+          {photo.media_type === 'video' && (
+            <span className="glass absolute top-2 left-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold text-ink-100">
+              <VideoCameraIcon weight="fill" className="size-3 text-flare-400" /> Video
+            </span>
+          )}
         </>
       ) : (
-        <div className="w-full h-full bg-stone-900/50 animate-pulse" />
+        <div className="h-full w-full animate-pulse bg-ink-800/60" />
       )}
     </button>
   )

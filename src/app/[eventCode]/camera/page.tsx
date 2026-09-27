@@ -2,10 +2,10 @@
 
 import { useState, useRef, useEffect } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
-import { Camera, RefreshCcw, Flashlight, ArrowLeft, Loader2, CheckCircle2 } from "lucide-react"
+import { ArrowLeftIcon, CameraRotateIcon, LightningIcon, SpinnerGapIcon } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
-import { applyFilterToCanvas, FilterType, FILTERS } from "@/components/camera/CameraFilters"
+import { applyFilterToCanvas, FilterType, FILTERS, FILTER_CSS } from "@/components/camera/CameraFilters"
 import { uploadMediaToTelegram } from "@/lib/telegram/actions"
 
 export default function CameraPage() {
@@ -285,32 +285,25 @@ export default function CameraPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-stone-950 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-stone-500 animate-spin" />
+      <div className="grid min-h-[100dvh] place-items-center" aria-busy="true">
+        <div className="flex flex-col items-center gap-4">
+          <SpinnerGapIcon className="size-7 animate-spin text-ink-400" />
+          <p className="text-sm text-ink-400">Loading film</p>
+        </div>
       </div>
     )
   }
 
   const remaining = Math.max(0, event.photo_limit - photosCount)
+  const stampDate = `'26 ${new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }).replace('/', ' ')}`
 
   return (
-    <div className="min-h-screen bg-stone-950 flex flex-col items-center justify-between p-4 font-sans text-stone-100 overflow-hidden">
-      {/* SVG Noise Filter Definition */}
-      <svg className="hidden">
+    <div className="flex min-h-[100dvh] flex-col items-center justify-between gap-4 overflow-hidden px-4 pt-4 pb-6">
+      {/* SVG noise used by the grain looks */}
+      <svg className="hidden" aria-hidden>
         <filter id="noiseFilter">
-          <feTurbulence 
-            type="fractalNoise" 
-            baseFrequency="0.6" 
-            numOctaves="3" 
-            stitchTiles="stitch"
-          >
-            <animate 
-              attributeName="seed" 
-              from="0" 
-              to="100" 
-              dur="10s" 
-              repeatCount="indefinite" 
-            />
+          <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="3" stitchTiles="stitch">
+            <animate attributeName="seed" from="0" to="100" dur="10s" repeatCount="indefinite" />
           </feTurbulence>
           <feColorMatrix type="saturate" values="0" />
           <feComponentTransfer>
@@ -319,9 +312,12 @@ export default function CameraPage() {
           <feBlend in="SourceGraphic" operator="overlay" />
         </filter>
       </svg>
-      {/* Header / StatusBar */}
-      <div className="w-full max-w-md flex items-center justify-between px-2 pt-4">
-        <button 
+
+      {/* Top bar */}
+      <div className="flex w-full max-w-md items-center justify-between">
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => {
             if (isHost && event?.id) {
               router.push(`/dashboard/events/${event.id}`)
@@ -329,192 +325,147 @@ export default function CameraPage() {
               router.push(`/${eventCode}`)
             }
           }}
-          className="flex items-center gap-2 group text-stone-600 hover:text-stone-400"
+          className="-ml-2"
         >
-          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          <span className="text-[10px] uppercase tracking-widest font-medium">
-            {isHost ? 'Back to Dashboard' : 'Back to Hub'}
-          </span>
-        </button>
-        <div className="flex flex-col items-center">
-          <span className="text-[10px] uppercase tracking-widest text-stone-500 mb-1">Event Vault</span>
-          <span className="font-serif italic text-stone-100">#{eventCode}</span>
+          <ArrowLeftIcon />
+          {isHost ? 'Dashboard' : 'Back'}
+        </Button>
+        <div className="text-center">
+          <p className="max-w-[160px] truncate text-sm font-medium text-ink-100">{event.name}</p>
+          <p className="tabular font-mono text-[11px] text-ink-400">#{eventCode}</p>
         </div>
         <div className="text-right">
-          <p className="text-[10px] uppercase tracking-widest text-stone-500">Expiring</p>
-          <p className="text-xs font-mono text-amber-500">
-            {new Date(event.reveal_time).toLocaleDateString()}
-          </p>
+          <p className="tabular font-mono text-sm font-semibold text-ink-100">{remaining}</p>
+          <p className="text-[11px] text-ink-400">shots left</p>
         </div>
       </div>
 
-      {/* Main Disposable Body */}
-      <div className="relative w-full max-w-sm aspect-[3/4] bg-stone-900 rounded-[2.5rem] p-4 shadow-2xl border-4 border-stone-800 flex flex-col items-center justify-center gap-6">
-        {/* Shutter Texture / Lines */}
-        <div className="absolute top-0 left-0 w-full h-12 bg-stone-800/30 rounded-t-[2.5rem] flex items-center justify-center">
-          <div className="w-1/2 h-[1px] bg-stone-700"></div>
-        </div>
-
+      {/* Camera body */}
+      <div className="relative w-full max-w-sm rounded-[40px] bg-gradient-to-b from-ink-800 to-ink-900 p-3 shadow-[inset_0_1px_0_rgb(255_255_255/0.08),inset_0_-2px_0_rgb(0_0_0/0.4),0_40px_80px_-30px_rgb(0_0_0/0.9)] ring-1 ring-white/[0.06]">
         {/* Viewfinder */}
-        <div className="relative w-full flex-1 bg-black rounded-3xl overflow-hidden border-2 border-stone-800 shadow-inner group">
-          <video 
-            ref={videoRef} 
-            autoPlay 
-            playsInline 
-            className={`w-full h-full object-cover transition-all duration-500 ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
-            style={{
-              filter: filter === 'bw' ? 'grayscale(100%) contrast(1.2) brightness(0.9)' :
-                      filter === 'sepia' ? 'sepia(0.8) contrast(1.1) brightness(0.95)' :
-                      filter === 'polaroid' ? 'contrast(0.9) brightness(1.1) saturate(0.8)' :
-                      filter === 'classic98' ? 'contrast(1.05) saturate(1.1) brightness(0.95)' :
-                      'none'
-            }}
+        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-[30px] bg-ink-950 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.06)]">
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            className={`h-full w-full object-cover transition-[filter] duration-500 ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
+            style={{ filter: FILTER_CSS[filter] }}
           />
-          
-          {/* Grain Overlay (for B&W and Sepia) */}
+
           {(filter === 'bw' || filter === 'sepia') && (
-            <div 
-              className="absolute inset-0 pointer-events-none opacity-30 mix-blend-overlay"
-              style={{ filter: 'url(#noiseFilter)' }}
-            />
+            <div className="pointer-events-none absolute inset-0 opacity-30 mix-blend-overlay" style={{ filter: 'url(#noiseFilter)' }} />
           )}
 
-          {/* Real-time Date Stamp Overlay */}
           {(filter === 'classic98' || filter === 'polaroid') && (
-            <div className="absolute bottom-4 right-4 pointer-events-none px-2 py-1">
-               <p className="text-[#ff6600] font-mono font-bold text-lg drop-shadow-[0_2px_2px_rgba(255,102,0,0.5)]">
-                 '26 {new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }).replace('/', ' ')}
-               </p>
-            </div>
+            <p className="stamp pointer-events-none absolute right-5 bottom-16 text-lg">{stampDate}</p>
           )}
 
-          {/* Flash Effect Layer */}
-          <div className={`absolute inset-0 bg-white transition-opacity duration-150 pointer-events-none ${flash ? 'opacity-100' : 'opacity-0'}`} />
+          <div className={`pointer-events-none absolute inset-0 bg-ink-100 transition-opacity duration-150 ${flash ? 'opacity-100' : 'opacity-0'}`} />
 
-          {/* Loading Overlay */}
           {isCapturing && (
-            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center backdrop-blur-sm">
-              <div className="w-12 h-12 rounded-full border-t-2 border-amber-500 animate-spin mb-4" />
-              <p className="text-amber-500 font-mono text-sm tracking-widest uppercase">Capturing...</p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-ink-950/60 backdrop-blur-sm" role="status">
+              <SpinnerGapIcon className="size-8 animate-spin text-flare-400" />
+              <p className="text-sm text-ink-100">
+                {captureMode === 'video' && perFileProgress > 0 ? `Sending to the vault ${perFileProgress}%` : 'Saving to the vault'}
+              </p>
             </div>
           )}
 
-          <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-[10px] font-mono tracking-tighter">
-            CAPACITY: <span className="text-amber-500">{photosCount.toString().padStart(2, '0')}</span> / {event.photo_limit}
+          <div className="glass absolute top-4 right-4 flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-xs text-ink-200">
+            <span className="tabular text-flare-400">{photosCount.toString().padStart(2, '0')}</span>
+            <span className="text-ink-400">/ {event.photo_limit}</span>
           </div>
 
-          {/* Video Timer */}
           {isRecording && (
-            <div className="absolute top-16 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-red-600/80 backdrop-blur-md px-3 py-1 rounded-full border border-red-500 shadow-lg animate-pulse">
-              <div className="w-2 h-2 rounded-full bg-white" />
-              <span className="text-white font-mono text-sm font-bold">
+            <div className="absolute top-4 left-4 flex items-center gap-2 rounded-full bg-safelight/90 px-3 py-1 shadow-lg">
+              <span className="size-2 animate-pulse rounded-full bg-ink-100" />
+              <span className="tabular font-mono text-xs font-semibold text-ink-100">
                 00:{recordingTime.toFixed(0).padStart(2, '0')} / 00:45
               </span>
             </div>
           )}
 
-          {/* Mode Indicator */}
           {!isRecording && !previewUrl && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 bg-black/40 backdrop-blur-md p-1 rounded-full border border-white/10">
-              <button 
-                onClick={() => setCaptureMode('photo')}
-                className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-bold transition-all ${
-                  captureMode === 'photo' ? 'bg-amber-500 text-stone-950' : 'text-stone-400'
-                }`}
-              >
-                Photo
-              </button>
-              <button 
-                onClick={() => setCaptureMode('video')}
-                className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-bold transition-all ${
-                  captureMode === 'video' ? 'bg-amber-500 text-stone-950' : 'text-stone-400'
-                }`}
-              >
-                Video
-              </button>
+            <div role="radiogroup" aria-label="Capture mode" className="glass absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-1 rounded-full p-1">
+              {(['photo', 'video'] as const).map((m) => (
+                <button
+                  key={m}
+                  role="radio"
+                  aria-checked={captureMode === m}
+                  onClick={() => setCaptureMode(m)}
+                  className={`rounded-full px-4 py-1.5 text-xs font-semibold capitalize transition-colors ${
+                    captureMode === m ? 'bg-ink-100 text-ink-950' : 'text-ink-300 hover:text-ink-100'
+                  }`}
+                >
+                  {m}
+                </button>
+              ))}
             </div>
           )}
 
-          {/* Preview Overlay */}
           {previewUrl && (
-            <div className="absolute inset-0 z-20 bg-black flex flex-col">
-              <video 
-                src={previewUrl} 
-                autoPlay 
-                loop 
-                playsInline 
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute bottom-6 left-0 w-full flex justify-around px-6">
-                <Button 
-                  onClick={dismissPreview}
-                  variant="outline" 
-                  className="bg-stone-900/80 border-stone-700 text-white rounded-full px-8 backdrop-blur-md"
-                >
+            <div className="absolute inset-0 z-20 flex flex-col bg-ink-950">
+              <video src={previewUrl} autoPlay loop playsInline className="h-full w-full object-cover" />
+              <div className="absolute inset-x-0 bottom-5 flex justify-center gap-3 px-5">
+                <Button onClick={dismissPreview} variant="secondary" size="lg" className="flex-1">
                   Retake
                 </Button>
-                <Button 
-                  onClick={uploadVideo}
-                  disabled={isCapturing}
-                  className="bg-amber-500 hover:bg-amber-400 text-stone-950 rounded-full px-8 font-bold"
-                >
-                  {isCapturing ? <Loader2 className="animate-spin" /> : "Upload"}
+                <Button onClick={uploadVideo} disabled={isCapturing} size="lg" className="flex-1">
+                  {isCapturing ? <SpinnerGapIcon className="animate-spin" /> : "Keep it"}
                 </Button>
               </div>
             </div>
           )}
         </div>
 
-        {/* Controls Section */}
-        <div className="w-full grid grid-cols-3 items-center gap-4 px-4 pb-4">
-          {/* Camera Switch */}
-          <button 
+        {/* Controls */}
+        <div className="grid grid-cols-3 items-center px-4 pt-5 pb-3">
+          <button
             onClick={toggleCamera}
-            className="w-12 h-12 rounded-full bg-stone-800 border border-stone-700 flex items-center justify-center hover:bg-stone-700 transition-colors mx-auto"
+            aria-label="Switch camera"
+            className="mx-auto grid size-12 place-items-center rounded-full bg-ink-700 text-ink-200 shadow-[inset_0_1px_0_rgb(255_255_255/0.08)] transition-colors hover:bg-ink-600 active:scale-95"
           >
-            <RefreshCcw className="w-5 h-5 text-stone-400" />
+            <CameraRotateIcon className="size-5" />
           </button>
 
-          {/* Shutter Button */}
-          <button 
+          <button
             onClick={handleCapture}
             disabled={isCapturing || remaining === 0 || previewUrl !== null}
-            className={`relative w-20 h-20 rounded-full flex items-center justify-center transition-all active:scale-95 mx-auto ${
-              remaining === 0 || previewUrl ? 'opacity-50 grayscale' : ''
-            }`}
+            aria-label={captureMode === 'photo' ? 'Take photo' : isRecording ? 'Stop recording' : 'Start recording'}
+            className="group relative mx-auto grid size-20 place-items-center rounded-full bg-gradient-to-b from-ink-600 to-ink-800 shadow-[0_8px_20px_-6px_rgb(0_0_0/0.8),inset_0_1px_0_rgb(255_255_255/0.12)] transition-transform active:scale-95 disabled:opacity-50 disabled:grayscale"
           >
-            {/* Shutter Outer */}
-            <div className="absolute inset-0 rounded-full bg-stone-700 border-4 border-stone-600 shadow-lg" />
-            {/* Shutter Core */}
-            <div className={`relative w-16 h-16 rounded-full border-4 border-stone-500 flex items-center justify-center transition-colors ${
-              isRecording ? 'bg-red-600 animate-pulse' : isCapturing ? 'bg-amber-600' : 'bg-amber-500 hover:bg-amber-400'
-            }`}>
-              {isRecording ? (
-                <div className="w-6 h-6 rounded-sm bg-white" />
-              ) : (
-                <div className="w-10 h-10 rounded-full border-2 border-amber-600/50" />
-              )}
-            </div>
+            <span
+              className={`grid size-[62px] place-items-center rounded-full shadow-[inset_0_-3px_6px_rgb(0_0_0/0.25),inset_0_2px_0_rgb(255_255_255/0.35)] transition-colors ${
+                isRecording ? 'animate-pulse bg-safelight' : isCapturing ? 'bg-flare-600' : captureMode === 'video' ? 'bg-safelight group-hover:bg-[#f06065]' : 'bg-flare-500 group-hover:bg-flare-400'
+              }`}
+            >
+              {isRecording && <span className="size-5 rounded-[5px] bg-ink-100" />}
+            </span>
           </button>
 
-          {/* Simulated Flash Toggle */}
-          <button className="w-12 h-12 rounded-full bg-stone-800 border border-stone-700 flex items-center justify-center hover:bg-stone-700 transition-colors mx-auto group">
-            <Flashlight className="w-5 h-5 text-stone-600 group-hover:text-amber-500" />
+          <button
+            aria-label="Flash (decorative)"
+            className="group mx-auto grid size-12 place-items-center rounded-full bg-ink-700 text-ink-400 shadow-[inset_0_1px_0_rgb(255_255_255/0.08)] transition-colors hover:bg-ink-600"
+          >
+            <LightningIcon className="size-5 group-hover:text-flare-400" />
           </button>
         </div>
       </div>
 
-      <div className="w-full max-w-md bg-stone-900/50 backdrop-blur-md border border-stone-800 p-4 rounded-3xl flex flex-col gap-3">
-        <p className="text-[10px] uppercase tracking-[0.3em] text-stone-500 text-center">Media Filters</p>
-        <div className="flex items-center justify-between gap-2 overflow-x-auto pb-2 px-2 scrollbar-hide">
+      {/* Film looks */}
+      <div className="w-full max-w-md">
+        <p className="mb-2 text-center text-xs text-ink-400">Film look</p>
+        <div role="radiogroup" aria-label="Film look" className="scrollbar-hide flex gap-2 overflow-x-auto px-1 pb-1 sm:justify-center">
           {FILTERS.map((f) => (
             <button
               key={f.id}
+              role="radio"
+              aria-checked={filter === f.id}
               onClick={() => setFilter(f.id as FilterType)}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-all ${
-                filter === f.id 
-                ? 'bg-amber-500 text-stone-950 shadow-lg' 
-                : 'bg-stone-800 text-stone-400 hover:text-stone-200'
+              className={`h-9 shrink-0 rounded-full px-4 text-[13px] font-medium transition-colors ${
+                filter === f.id
+                  ? 'bg-ink-100 text-ink-950'
+                  : 'bg-white/[0.05] text-ink-300 hover:bg-white/[0.09] hover:text-ink-100'
               }`}
             >
               {f.name}
@@ -523,14 +474,8 @@ export default function CameraPage() {
         </div>
       </div>
 
-      {/* Hidden Canvas for processing */}
+      {/* Hidden canvas for processing */}
       <canvas ref={canvasRef} className="hidden" />
-
-      <footer className="w-full text-center pb-4">
-        <p className="text-[9px] text-stone-700 tracking-[0.4em] uppercase font-mono">
-          SnapVault Premium // V26-03
-        </p>
-      </footer>
     </div>
   )
 }

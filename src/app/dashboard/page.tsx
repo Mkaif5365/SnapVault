@@ -1,9 +1,10 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
-import { PlusCircle, Calendar, Users, Camera } from "lucide-react"
+import { ArrowUpRightIcon, CalendarBlankIcon, FilmStripIcon, PlusIcon, SignOutIcon } from "@phosphor-icons/react/dist/ssr"
+import { AppHeader } from "@/components/app/AppHeader"
+import { StatusBadge } from "@/components/app/StatusBadge"
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -20,100 +21,113 @@ export default async function DashboardPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <div className="min-h-screen bg-stone-950 p-4 md:p-8 font-sans antialiased relative overflow-hidden">
-      {/* Ambient Glow */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-900/5 rounded-full blur-[120px] pointer-events-none" />
+    <div className="min-h-[100dvh]">
+      <AppHeader>
+        <form action="/auth/signout" method="post">
+          <Button variant="ghost" size="sm">
+            <SignOutIcon />
+            Sign out
+          </Button>
+        </form>
+      </AppHeader>
 
-      <div className="max-w-5xl mx-auto space-y-8 relative z-10">
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 border-b border-stone-900 pb-8">
-          <div className="max-w-full overflow-hidden">
-            <h1 className="text-3xl sm:text-4xl font-serif text-stone-100 italic tracking-tight">Host Dashboard</h1>
-            <p className="text-stone-500 mt-1 font-light text-sm sm:text-base">Manage your event vaults and reveal times.</p>
+      <main className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-14">
+        <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
+          <div>
+            <h1 className="font-display text-4xl font-bold tracking-[-0.035em] text-ink-100 md:text-5xl">Your vaults</h1>
+            <p className="mt-2 text-ink-400">
+              {events && events.length > 0
+                ? `${events.length} ${events.length === 1 ? "event" : "events"}. Open one to share the code or change the reveal time.`
+                : "Create a vault for each event you host."}
+            </p>
           </div>
-          <div className="flex gap-3 w-full sm:w-auto">
-            <Link href="/dashboard/events/new" className="flex-1 sm:flex-none">
-              <Button className="w-full bg-amber-500 text-stone-950 hover:bg-amber-400 rounded-full flex gap-2 font-medium shadow-lg shadow-amber-500/10 transition-all active:scale-95">
-                <PlusCircle className="w-4 h-4" />
-                New Event
-              </Button>
+          <Button asChild size="lg" className="self-start sm:self-auto">
+            <Link href="/dashboard/events/new">
+              <PlusIcon weight="bold" />
+              New vault
             </Link>
-            <form action="/auth/signout" method="post">
-              <Button variant="outline" className="border-stone-800 text-stone-400 hover:bg-stone-900 hover:text-stone-100 rounded-full transition-all active:scale-95">
-                Sign Out
-              </Button>
-            </form>
-          </div>
-        </header>
+          </Button>
+        </div>
 
         {events && events.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <ul className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {events.map((event) => {
               const revealDate = new Date(event.reveal_time);
               const isRevealed = revealDate < new Date();
-              
+
               return (
-                <Card key={event.id} className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl hover:border-stone-700/50 transition-all hover:shadow-2xl group overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  
-                  <CardHeader className="pb-4">
-                    <div className="flex justify-between items-start">
-                      <span className={`text-[9px] uppercase tracking-[0.2em] px-2.5 py-1 rounded-full font-mono font-bold ${isRevealed ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'}`}>
-                        {isRevealed ? 'Revealed' : 'Developing'}
-                      </span>
-                      <span className="text-stone-600 font-mono text-[10px] uppercase tracking-widest">#{event.code}</span>
+                <li key={event.id}>
+                  <Link
+                    href={`/dashboard/events/${event.id}`}
+                    className="surface group flex h-full flex-col p-5 transition-[transform,border-color] duration-300 ease-out-expo hover:-translate-y-1 hover:border-white/[0.12]"
+                  >
+                    <div className="flex items-center justify-between">
+                      <StatusBadge status={isRevealed ? "revealed" : "developing"} />
+                      <span className="tabular font-mono text-xs text-ink-400">#{event.code}</span>
                     </div>
-                    <CardTitle className="text-xl font-serif italic text-stone-100 truncate mt-4">
+                    <h2 className="mt-5 line-clamp-2 font-display text-2xl font-semibold tracking-[-0.025em] text-ink-100">
                       {event.name}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6 pt-0">
-                    <div className="space-y-3 text-xs">
-                      <div className="flex items-center gap-3 text-stone-400">
-                        <div className="w-7 h-7 rounded-lg bg-stone-950/50 border border-stone-800 flex items-center justify-center">
-                          <Calendar className="w-3.5 h-3.5 text-stone-500" />
-                        </div>
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wider text-stone-600 font-mono">Reveal Date</p>
-                          <p className="text-stone-300 font-medium">{revealDate.toLocaleDateString()} @ {revealDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                        </div>
+                    </h2>
+                    <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-white/[0.06] pt-4 text-sm">
+                      <div>
+                        <dt className="flex items-center gap-1.5 text-ink-400">
+                          <CalendarBlankIcon className="size-3.5" /> Reveal
+                        </dt>
+                        <dd className="mt-1 text-ink-200">
+                          {revealDate.toLocaleDateString(undefined, { month: "short", day: "numeric" })},{" "}
+                          {revealDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </dd>
                       </div>
-                      <div className="flex items-center gap-3 text-stone-400">
-                        <div className="w-7 h-7 rounded-lg bg-stone-950/50 border border-stone-800 flex items-center justify-center">
-                          <Camera className="w-3.5 h-3.5 text-stone-500" />
-                        </div>
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wider text-stone-600 font-mono">Photo Limit</p>
-                          <p className="text-stone-300 font-medium">{event.photo_limit} Maximum Photos</p>
-                        </div>
+                      <div>
+                        <dt className="flex items-center gap-1.5 text-ink-400">
+                          <FilmStripIcon className="size-3.5" /> Roll size
+                        </dt>
+                        <dd className="tabular mt-1 text-ink-200">{event.photo_limit} shots</dd>
                       </div>
-                    </div>
-                    <Link href={`/dashboard/events/${event.id}`}>
-                      <Button variant="outline" className="w-full border-stone-800 text-stone-300 hover:bg-stone-800 hover:text-stone-100 rounded-xl transition-all">
-                        Open Vault
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
+                    </dl>
+                    <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-ink-300 transition-colors group-hover:text-flare-400">
+                      Open vault
+                      <ArrowUpRightIcon className="size-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    </span>
+                  </Link>
+                </li>
               );
             })}
-          </div>
+          </ul>
         ) : (
-          <div className="bg-stone-900/20 border-dashed border-2 border-stone-800/50 rounded-3xl p-8 sm:p-16 text-center space-y-6 flex flex-col items-center">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-stone-900 rounded-2xl flex items-center justify-center shadow-inner border border-stone-800">
-              <Camera className="w-6 h-6 sm:w-8 sm:h-8 text-stone-700" />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-xl sm:text-2xl font-serif italic text-stone-100 tracking-tight">No Active Vaults</h3>
-              <p className="text-stone-500 max-w-xs sm:max-w-sm mx-auto text-xs sm:text-sm font-light">Your events will appear here once you create your first event vault.</p>
-            </div>
-            <Link href="/dashboard/events/new">
-              <Button className="bg-amber-500 text-stone-950 hover:bg-amber-400 rounded-full px-10 font-medium shadow-lg shadow-amber-500/10">
-                Create First Event
+          <div className="surface mt-10 grid grid-cols-1 items-center gap-10 overflow-hidden p-8 md:grid-cols-[1fr_1.1fr] md:p-12">
+            <div>
+              <h2 className="font-display text-3xl font-bold tracking-[-0.03em] text-ink-100">A fresh roll, ready to load.</h2>
+              <p className="mt-3 max-w-[40ch] text-ink-400">
+                Name your event, pick a reveal time, and share the code. Guests can start shooting right away.
+              </p>
+              <Button asChild size="lg" className="mt-8">
+                <Link href="/dashboard/events/new">
+                  <PlusIcon weight="bold" />
+                  Create your first vault
+                </Link>
               </Button>
-            </Link>
+            </div>
+            {/* Unexposed prints: what an empty vault looks like */}
+            <div aria-hidden className="relative mx-auto h-56 w-full max-w-sm [perspective:1000px]">
+              {[-14, 0, 12].map((r, i) => (
+                <div
+                  key={r}
+                  className="print absolute top-1/2 left-1/2 w-40"
+                  style={{ transform: `translate(-50%, -50%) translateX(${(i - 1) * 70}px) rotateY(-18deg) rotateZ(${r}deg) translateZ(${i * 20}px)` }}
+                >
+                  <div className="flex aspect-[4/5] items-end justify-end rounded-[2px] bg-gradient-to-br from-ink-800 to-ink-950 p-2">
+                    <span className="stamp text-[11px] opacity-70">&apos;-- -- --</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
-      </div>
+        {error && (
+          <p role="alert" className="mt-6 text-sm text-[#ff9ea1]">Could not load your vaults: {error.message}</p>
+        )}
+      </main>
     </div>
   )
 }

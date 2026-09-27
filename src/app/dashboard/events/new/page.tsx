@@ -15,11 +15,11 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { ArrowLeft, Loader2 } from "lucide-react"
+import { ArrowLeftIcon, SpinnerGapIcon } from "@phosphor-icons/react"
+import { AppHeader } from "@/components/app/AppHeader"
 import Link from "next/link"
 
 const formSchema = z.object({
@@ -92,36 +92,67 @@ export default function NewEventPage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-950 p-4 md:p-8 flex flex-col items-center antialiased relative overflow-hidden">
-      {/* Ambient Glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-900/5 rounded-full blur-[120px] pointer-events-none" />
+    <div className="min-h-[100dvh]">
+      <AppHeader />
+      <main className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-4 py-10 md:px-8 md:py-14 lg:grid-cols-[1fr_minmax(0,560px)] lg:gap-16">
+        <div>
+          <Link href="/dashboard" className="group inline-flex items-center gap-2 text-sm text-ink-400 transition-colors hover:text-ink-100">
+            <ArrowLeftIcon className="size-4 transition-transform group-hover:-translate-x-0.5" />
+            All vaults
+          </Link>
+          <h1 className="mt-6 font-display text-4xl font-bold tracking-[-0.035em] text-ink-100 md:text-5xl">Load a new roll</h1>
+          <p className="mt-4 max-w-[38ch] text-lg leading-relaxed text-ink-400">
+            Give the vault a name, choose when it opens, and decide how many shots the whole event gets.
+          </p>
+        </div>
 
-      <div className="w-full max-w-2xl space-y-6 relative z-10">
-        <Link href="/dashboard" className="inline-flex items-center text-stone-500 hover:text-amber-500 transition-all gap-2 text-[10px] uppercase tracking-[0.2em] font-mono group">
-          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-          Back to Dashboard
-        </Link>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="surface space-y-8 p-6 md:p-8">
+            <fieldset className="space-y-5">
+              <legend className="mb-5 font-display text-lg font-semibold tracking-[-0.02em] text-ink-100">The event</legend>
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Event name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Mira and Leo's wedding" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-        <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl shadow-2xl overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-amber-500" />
-          <CardHeader className="pt-10 pb-6">
-            <CardTitle className="text-3xl font-serif italic text-stone-100">Create New Event Vault</CardTitle>
-            <CardDescription className="text-stone-500 font-light">
-              Configure your vault settings and reveal timer.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pb-10">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description <span className="font-normal text-ink-400">(optional)</span></FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Where, when, anything guests should know" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </fieldset>
+
+            <fieldset className="space-y-5 border-t border-white/[0.06] pt-8">
+              <legend className="sr-only">Roll and reveal</legend>
+              <p aria-hidden className="font-display text-lg font-semibold tracking-[-0.02em] text-ink-100">Roll and reveal</p>
+              <div className="grid grid-cols-1 items-start gap-5 md:grid-cols-2">
                 <FormField
                   control={form.control}
-                  name="name"
+                  name="reveal_time"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] uppercase tracking-[0.2em] text-stone-500 font-mono ml-1">Event Name</FormLabel>
+                      <FormLabel>Reveal photos at</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Smith Wedding, Summer Trip" {...field} className="h-12 bg-stone-950/50 border-stone-800 text-stone-100 placeholder:text-stone-700 focus-visible:ring-amber-500/30 rounded-xl" />
+                        <Input type="datetime-local" {...field} className="tabular font-mono text-sm" />
                       </FormControl>
+                      <FormDescription>Everyone sees the gallery at this moment.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -129,77 +160,46 @@ export default function NewEventPage() {
 
                 <FormField
                   control={form.control}
-                  name="description"
+                  name="photo_limit"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] uppercase tracking-[0.2em] text-stone-500 font-mono ml-1">Description (Optional)</FormLabel>
+                      <FormLabel>Shots on the roll</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Share details about the event..." {...field} className="bg-stone-950/50 border-stone-800 text-stone-100 placeholder:text-stone-700 focus-visible:ring-amber-500/30 rounded-xl min-h-[100px]" />
+                        <Input type="number" {...field} className="tabular" />
                       </FormControl>
+                      <FormDescription>Up to 100. A promo code unlocks more.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="reveal_time"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-[10px] uppercase tracking-[0.2em] text-stone-500 font-mono ml-1">Reveal Images At</FormLabel>
-                        <FormControl>
-                          <Input type="datetime-local" {...field} className="h-12 bg-stone-950/50 border-stone-800 text-stone-100 font-mono focus-visible:ring-amber-500/30 rounded-xl" />
-                        </FormControl>
-                        <FormDescription className="text-[10px] font-mono text-stone-600 uppercase tracking-tight">When images will be revealed to guests.</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              <FormField
+                control={form.control}
+                name="promocode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Promo code <span className="font-normal text-ink-400">(optional)</span></FormLabel>
+                    <FormControl>
+                      <Input placeholder="Code" {...field} className="font-mono tracking-[0.15em] uppercase placeholder:tracking-normal placeholder:normal-case" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </fieldset>
 
-                  <FormField
-                    control={form.control}
-                    name="photo_limit"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-[10px] uppercase tracking-[0.2em] text-stone-500 font-mono ml-1">Max Images (Total)</FormLabel>
-                        <FormControl>
-                          <Input type="number" {...field} className="h-12 bg-stone-950/50 border-stone-800 text-stone-100 focus-visible:ring-amber-500/30 rounded-xl" />
-                        </FormControl>
-                      <FormDescription className="text-[10px] font-mono text-stone-600 uppercase tracking-tight">Standard limit is 100. Use code to boost.</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="promocode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] uppercase tracking-[0.2em] text-stone-500 font-mono ml-1">Promo Code</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter code to boost limit" {...field} className="h-12 bg-stone-950/50 border-stone-800 text-stone-100 placeholder:text-stone-700 focus-visible:ring-amber-500/30 rounded-xl font-mono uppercase tracking-widest" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button type="submit" className="w-full bg-amber-500 text-stone-950 hover:bg-amber-400 h-14 text-lg rounded-full font-bold shadow-lg shadow-amber-500/10 active:scale-95 transition-all" disabled={loading}>
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Initializing Vault...
-                    </>
-                  ) : "Create Event Vault"}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-      </div>
+            <Button type="submit" size="xl" className="w-full" disabled={loading}>
+              {loading ? (
+                <>
+                  <SpinnerGapIcon className="size-5 animate-spin" />
+                  Creating vault...
+                </>
+              ) : "Create vault"}
+            </Button>
+          </form>
+        </Form>
+      </main>
     </div>
   )
 }

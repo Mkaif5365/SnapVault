@@ -2,8 +2,10 @@
 
 import { QRCodeSVG } from "qrcode.react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Copy, ExternalLink, Calendar, Camera, Users, CheckCircle2, Trash2, Eye, Download, Lock, Unlock, Clock, Trophy, UserX, UserMinus, Tag, Plus, Trash } from "lucide-react"
+import { ArrowLeftIcon, ArrowUpRightIcon, CalendarBlankIcon, CameraIcon, CheckIcon, CopyIcon, DownloadSimpleIcon, EyeIcon, EyeSlashIcon, LockIcon, LockOpenIcon, TrashIcon, TrophyIcon, UploadSimpleIcon, UsersThreeIcon } from "@phosphor-icons/react"
+import { AppHeader } from "@/components/app/AppHeader"
+import { StatusBadge } from "@/components/app/StatusBadge"
+import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
@@ -277,8 +279,17 @@ export default function EventDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-stone-100 flex items-center justify-center">
-        <div className="animate-pulse text-stone-400 font-serif italic">Loading vault...</div>
+      <div className="min-h-[100dvh]" aria-busy="true" aria-label="Loading vault">
+        <AppHeader />
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-4 py-10 md:px-8 lg:grid-cols-[1fr_340px]">
+          <div className="space-y-6">
+            <div className="h-6 w-28 animate-pulse rounded-full bg-ink-800" />
+            <div className="h-14 w-3/4 animate-pulse rounded-2xl bg-ink-800" />
+            <div className="h-28 animate-pulse rounded-[20px] bg-ink-900" />
+            <div className="h-72 animate-pulse rounded-[20px] bg-ink-900" />
+          </div>
+          <div className="h-[520px] animate-pulse rounded-[20px] bg-ink-900" />
+        </div>
       </div>
     )
   }
@@ -286,256 +297,209 @@ export default function EventDetailPage() {
   const revealDate = new Date(event.reveal_time)
   const isRevealed = revealDate < new Date()
   const joinUrl = typeof window !== 'undefined' ? `${window.location.origin}/${event.code}` : ''
+  const usedPct = event.photo_limit > 0 ? Math.min(100, Math.round((photosCount / event.photo_limit) * 100)) : 0
+  const uploadPct = Math.round(Object.values(uploadProgress).reduce((a, b) => a + b, 0) / Math.max(1, Object.keys(uploadProgress).length))
+  const stats = [
+    { icon: CalendarBlankIcon, label: "Reveal", value: revealDate.toLocaleDateString(undefined, { month: "short", day: "numeric" }), sub: revealDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) },
+    { icon: UsersThreeIcon, label: "Guests", value: participantsCount, sub: "joined" },
+    { icon: CameraIcon, label: "Shots", value: photosCount, sub: `of ${event.photo_limit}` },
+    { icon: TrophyIcon, label: "Top shooter", value: topPhotographer || "None yet", sub: "most shots" },
+  ]
 
   return (
-    <div className="min-h-screen bg-stone-950 p-4 md:p-8 font-sans antialiased relative overflow-hidden">
-      {/* Ambient Glow */}
-      <div className="absolute top-1/4 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-900/5 rounded-full blur-[120px] pointer-events-none" />
+    <div className="min-h-[100dvh]">
+      <AppHeader>
+        <Button asChild variant="ghost" size="sm">
+          <Link href={`/${event.code}`} target="_blank">
+            Guest view
+            <ArrowUpRightIcon />
+          </Link>
+        </Button>
+      </AppHeader>
 
-      <div className="max-w-4xl mx-auto space-y-8 relative z-10">
-        <Link href="/dashboard" className="inline-flex items-center text-stone-500 hover:text-amber-500 transition-all gap-2 text-[10px] uppercase tracking-[0.2em] font-mono group">
-          <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
-          Back to Dashboard
+      <main className="mx-auto max-w-6xl px-4 py-8 md:px-8 md:py-12">
+        <Link href="/dashboard" className="group inline-flex items-center gap-2 text-sm text-ink-400 transition-colors hover:text-ink-100">
+          <ArrowLeftIcon className="size-4 transition-transform group-hover:-translate-x-0.5" />
+          All vaults
         </Link>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left: Event Info */}
-          <div className="lg:col-span-2 space-y-8">
-            <header className="space-y-6">
-              <div className="flex items-start justify-between">
-                <div className="space-y-4 max-w-full overflow-hidden">
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                    <span className={`text-[8px] sm:text-[9px] uppercase tracking-[0.2em] px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full font-mono font-bold ${isRevealed ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'}`}>
-                      {isRevealed ? 'Revealed' : 'Developing'}
-                    </span>
-                    {event.is_locked && (
-                      <span className="text-[8px] sm:text-[9px] uppercase tracking-[0.2em] px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full font-mono font-bold bg-red-500/10 text-red-500 border border-red-500/20">
-                        Locked
-                      </span>
-                    )}
-                  </div>
-                  <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl font-serif text-stone-100 italic tracking-tight leading-tight capitalize break-words">{event.name}</h1>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-stone-600 hover:text-red-400 transition-colors h-9 sm:h-10 px-3 sm:px-4 rounded-xl text-[10px] sm:text-xs font-mono uppercase tracking-wider shrink-0"
-                  onClick={handleDelete}
-                >
-                  <Trash2 className="w-3 sm:w-3.5 h-3 sm:h-3.5 mr-1.5 sm:mr-2" />
-                  <span className="hidden xs:inline">Delete Event</span>
-                  <span className="xs:hidden">Delete</span>
-                </Button>
+        <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="min-w-0 space-y-6">
+            <header>
+              <div className="flex flex-wrap items-center gap-2">
+                <StatusBadge status={isRevealed ? "revealed" : "developing"} />
+                {event.is_locked && <StatusBadge status="locked" />}
               </div>
-              <p className="text-stone-400 text-lg leading-relaxed font-light max-w-2xl">{event.description || "No description provided."}</p>
+              <h1 className="mt-4 font-display text-4xl leading-[1.05] font-bold tracking-[-0.035em] break-words text-ink-100 md:text-5xl">
+                {event.name}
+              </h1>
+              <p className="mt-3 max-w-[60ch] text-ink-400">{event.description || "No description yet."}</p>
             </header>
 
-            {/* Stats Cards */}
-             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-              <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
-                <CardContent className="pt-5 pb-4 sm:pt-6 sm:pb-5 flex flex-col items-center">
-                  <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-stone-600 mb-2 sm:mb-3" />
-                  <p className="text-[8px] sm:text-[9px] uppercase tracking-[0.2em] text-stone-500 font-mono mb-1">Reveal</p>
-                  <p className="font-medium text-stone-100 text-xs sm:text-sm">{revealDate.toLocaleDateString()}</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
-                <CardContent className="pt-5 pb-4 sm:pt-6 sm:pb-5 flex flex-col items-center">
-                  <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-stone-600 mb-2 sm:mb-3" />
-                  <p className="text-[8px] sm:text-[9px] uppercase tracking-[0.2em] text-stone-500 font-mono mb-1">Guests</p>
-                  <p className="font-medium text-stone-100 text-xs sm:text-sm">{participantsCount}</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
-                <CardContent className="pt-5 pb-4 sm:pt-6 sm:pb-5 flex flex-col items-center">
-                  <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-stone-600 mb-2 sm:mb-3" />
-                   <p className="text-[8px] sm:text-[9px] uppercase tracking-[0.2em] text-stone-500 font-mono mb-1">Media</p>
-                  <p className="font-medium text-stone-100 text-xs sm:text-sm">{photosCount} / {event.photo_limit}</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
-                <CardContent className="pt-5 pb-4 sm:pt-6 sm:pb-5 flex flex-col items-center">
-                  <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500/70 mb-2 sm:mb-3" />
-                  <p className="text-[8px] sm:text-[9px] uppercase tracking-[0.2em] text-stone-500 font-mono mb-1">Best Shot</p>
-                  <p className="font-medium text-stone-100 text-xs sm:text-sm truncate w-full text-center px-1">{topPhotographer || '—'}</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Utilization Bar */}
-            <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl overflow-hidden">
-              <CardContent className="pt-6 pb-6 space-y-4">
-                <div className="flex justify-between items-center text-[10px] uppercase font-mono tracking-[0.2em]">
-                  <span className="text-stone-500">Roll Utilization</span>
-                  <span className="text-amber-500">{event.photo_limit > 0 ? Math.round((photosCount / event.photo_limit) * 100) : 0}%</span>
+            <section aria-label="Vault stats" className="surface grid grid-cols-2 divide-white/[0.06] sm:grid-cols-4 sm:divide-x">
+              {stats.map((stat) => (
+                <div key={stat.label} className="min-w-0 p-5">
+                  <p className="flex items-center gap-1.5 text-xs text-ink-400">
+                    <stat.icon className="size-3.5" /> {stat.label}
+                  </p>
+                  <p className="tabular mt-2 truncate font-display text-2xl font-semibold tracking-[-0.02em] text-ink-100">{stat.value}</p>
+                  <p className="text-xs text-ink-400">{stat.sub}</p>
                 </div>
-                <div className="w-full bg-stone-950 h-3 rounded-full overflow-hidden border border-stone-900 inner-shadow">
-                  <div
-                    className="bg-gradient-to-r from-amber-600 to-amber-400 h-full transition-all duration-1000 shadow-[0_0_15px_rgba(245,158,11,0.3)]"
-                    style={{ width: `${Math.min(100, event.photo_limit > 0 ? (photosCount / event.photo_limit) * 100 : 0)}%` }}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+              ))}
+            </section>
 
-            {/* Host Controls */}
-            <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
-              <CardHeader className="border-b border-stone-800/50 pb-4">
-                <CardTitle className="text-xl font-serif italic text-stone-100 tracking-tight">Event Control</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-0 p-0">
-                {/* Lock/Unlock */}
-                <div className="flex items-center justify-between p-6 hover:bg-stone-800/20 transition-colors">
+            <section aria-label="Roll used" className="surface p-5">
+              <div className="flex items-baseline justify-between text-sm">
+                <span className="text-ink-300">Roll used</span>
+                <span className="tabular font-mono text-ink-100">{usedPct}%</span>
+              </div>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-ink-950 shadow-[inset_0_1px_2px_rgb(0_0_0/0.6)]">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-flare-600 to-flare-400 transition-[width] duration-1000 ease-out-expo"
+                  style={{ width: `${usedPct}%` }}
+                />
+              </div>
+            </section>
+
+            <section className="surface">
+              <h2 className="px-6 pt-6 font-display text-xl font-semibold tracking-[-0.02em] text-ink-100">Controls</h2>
+              <div className="mt-2 divide-y divide-white/[0.06]">
+                <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm font-medium text-stone-100">Vault Security</p>
-                    <p className="text-xs text-stone-500 mt-0.5">Control entrance to the digital vault</p>
+                    <p className="font-medium text-ink-100">Guest entry</p>
+                    <p className="mt-0.5 text-sm text-ink-400">
+                      {event?.is_locked ? "Entry is closed. Guests who already joined can keep shooting." : "Anyone with the code can join."}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {event?.is_locked ? (
-                      <Button
-                        key="unlock-btn"
-                        variant="outline"
-                        size="sm"
-                        className="rounded-full text-[10px] uppercase tracking-wider font-mono border-stone-700 bg-stone-900 text-stone-100 hover:bg-stone-800 transition-all active:scale-95"
-                        onClick={handleToggleLock}
-                      >
-                        <Unlock className="w-3 h-3 mr-2" /> Open Entry
-                      </Button>
-                    ) : (
-                      <Button
-                        key="lock-btn"
-                        size="sm"
-                        className="rounded-full text-[10px] uppercase tracking-wider font-mono bg-red-600/10 text-red-500 border border-red-500/20 hover:bg-red-600/20 hover:text-red-400 transition-all active:scale-95"
-                        onClick={handleToggleLock}
-                      >
-                        <Lock className="w-3 h-3 mr-2" /> Close Entry
-                      </Button>
-                    )}
-                  </div>
+                  {event?.is_locked ? (
+                    <Button key="unlock-btn" variant="secondary" size="sm" onClick={handleToggleLock}>
+                      <LockOpenIcon /> Open entry
+                    </Button>
+                  ) : (
+                    <Button key="lock-btn" variant="destructive" size="sm" onClick={handleToggleLock}>
+                      <LockIcon /> Close entry
+                    </Button>
+                  )}
                 </div>
 
-                <div className="h-px bg-stone-800/50 mx-6" />
-
-                 {/* Reveal Time */}
-                <div className="p-6 space-y-4 hover:bg-stone-800/20 transition-colors">
+                <div className="space-y-3 p-6">
                   <div>
-                    <p className="text-sm font-medium text-stone-100">Reveal Timer</p>
-                    <p className="text-xs text-stone-500 mt-0.5">Adjust when photos are automatically revealed</p>
+                    <p className="font-medium text-ink-100">Reveal time</p>
+                    <p className="mt-0.5 text-sm text-ink-400">Move it earlier or later. Guests see the change right away.</p>
                   </div>
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-2">
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <label htmlFor="reveal-time" className="sr-only">Reveal time</label>
                     <input
+                      id="reveal-time"
                       type="datetime-local"
                       value={newRevealTime}
                       onChange={(e) => setNewRevealTime(e.target.value)}
-                      className="flex-1 bg-stone-950/50 border border-stone-800 rounded-xl px-4 py-2.5 text-sm text-stone-100 focus:outline-none focus:border-amber-500/50"
+                      className="tabular h-10 flex-1 rounded-xl border border-white/10 bg-ink-950/70 px-3.5 font-mono text-sm text-ink-100 [color-scheme:dark] focus:border-flare-500/70 focus:ring-4 focus:ring-flare-500/15 focus:outline-none"
                     />
-                    <Button size="sm" className="bg-amber-500 text-stone-950 hover:bg-amber-400 rounded-xl px-6 py-2.5 h-auto text-[11px] font-bold shrink-0 shadow-lg shadow-amber-500/10 active:scale-95 transition-all" onClick={handleRevealTimeUpdate}>
-                      Set Timer
-                    </Button>
+                    <Button onClick={handleRevealTimeUpdate}>Save time</Button>
                   </div>
                 </div>
 
-                <div className="h-px bg-stone-800/50 mx-6" />
-
-                {/* Promocode */}
-                <div className="p-6 space-y-4 hover:bg-stone-800/20 transition-colors">
+                <div className="space-y-3 p-6">
                   <div>
-                    <p className="text-sm font-medium text-stone-100">Photo Capacity</p>
-                    <p className="text-xs text-stone-500 mt-0.5">Use codes to increase photo limit</p>
+                    <p className="font-medium text-ink-100">Roll size</p>
+                    <p className="mt-0.5 text-sm text-ink-400">Have a promo code? Apply it to add more shots.</p>
                   </div>
-                  <div className="flex items-center gap-2 text-xs">
+                  <div className="flex gap-2">
+                    <label htmlFor="promo" className="sr-only">Promo code</label>
                     <input
+                      id="promo"
                       type="text"
-                      placeholder="ENTER PROMOCODE"
+                      placeholder="Promo code"
                       value={promoCode}
                       onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                      className="flex-1 bg-stone-950/50 border border-stone-800 rounded-xl px-4 py-2 text-sm font-mono uppercase tracking-widest text-stone-100 placeholder:text-stone-700 focus:outline-none focus:border-amber-500/50"
+                      className="h-10 min-w-0 flex-1 rounded-xl border border-white/10 bg-ink-950/70 px-3.5 font-mono text-sm tracking-[0.15em] text-ink-100 placeholder:tracking-normal placeholder:text-ink-500 focus:border-flare-500/70 focus:ring-4 focus:ring-flare-500/15 focus:outline-none"
                     />
-                    <Button size="sm" className="bg-stone-800 text-stone-100 hover:bg-stone-700 rounded-xl px-5 text-[11px] font-bold" onClick={handleApplyPromo}>
-                      Apply
-                    </Button>
+                    <Button variant="secondary" onClick={handleApplyPromo}>Apply</Button>
                   </div>
                   {promoStatus && (
-                    <p className={`text-[10px] uppercase tracking-widest font-mono text-center ${promoStatus.startsWith('✓') ? 'text-green-400' : promoStatus.startsWith('✗') ? 'text-red-400' : 'text-stone-500'}`}>
+                    <p
+                      role="status"
+                      className={cn(
+                        "text-sm",
+                        promoStatus.startsWith('✓') ? 'text-[#7ee0ae]' : promoStatus.startsWith('✗') ? 'text-[#ff9ea1]' : 'text-ink-400'
+                      )}
+                    >
                       {promoStatus}
                     </p>
                   )}
                 </div>
 
-                <div className="h-px bg-stone-800/50 mx-6" />
-
-                {/* Download All */}
-                <div className="flex items-center justify-between p-6 hover:bg-stone-800/20 transition-colors">
+                <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm font-medium text-stone-100">Batch Export</p>
-                    <p className="text-xs text-stone-500 mt-0.5">Export all media as a ZIP archive</p>
+                    <p className="font-medium text-ink-100">Download everything</p>
+                    <p className="mt-0.5 text-sm text-ink-400">All photos and videos in one ZIP, numbered in order.</p>
                   </div>
-                  <a href={`/api/events/${id}/download`} download>
-                    <Button variant="outline" size="sm" className="rounded-full text-[10px] uppercase tracking-wider font-mono border-stone-700 text-stone-400 hover:bg-stone-800 hover:text-stone-100" disabled={photosCount === 0}>
-                      <Download className="w-3.5 h-3.5 mr-2" /> ZIP Archive
-                    </Button>
-                  </a>
+                  <Button asChild variant="outline" size="sm" className={cn(photosCount === 0 && "pointer-events-none opacity-45")}>
+                    <a href={`/api/events/${id}/download`} download aria-disabled={photosCount === 0}>
+                      <DownloadSimpleIcon /> Download ZIP
+                    </a>
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </section>
 
-            {/* Participants List */}
-            <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
-              <CardHeader className="flex flex-row items-center justify-between border-b border-stone-800/50 pb-4">
-                <CardTitle className="text-xl font-serif italic text-stone-100 tracking-tight">Participant List</CardTitle>
-                <Button variant="ghost" size="sm" className="rounded-full text-[10px] uppercase tracking-[0.2em] font-mono text-stone-500 hover:text-amber-500" onClick={() => setShowParticipants(!showParticipants)}>
-                  <Users className="w-3.5 h-3.5 mr-2" />
-                  {showParticipants ? 'Close' : `View (${participants.length})`}
+            <section className="surface">
+              <div className="flex items-center justify-between gap-4 p-6">
+                <h2 className="font-display text-xl font-semibold tracking-[-0.02em] text-ink-100">
+                  Guests <span className="tabular text-ink-400">{participants.length}</span>
+                </h2>
+                <Button variant="ghost" size="sm" onClick={() => setShowParticipants(!showParticipants)} aria-expanded={showParticipants}>
+                  {showParticipants ? 'Hide' : 'Show list'}
                 </Button>
-              </CardHeader>
+              </div>
               {showParticipants && (
-                <CardContent className="pt-6">
+                <div className="border-t border-white/[0.06] p-3">
                   {participants.length === 0 ? (
-                    <p className="text-stone-600 text-xs italic text-center py-4 font-mono uppercase tracking-widest">No active participants</p>
+                    <p className="px-3 py-8 text-center text-sm text-ink-400">No one has joined yet. Share the code to get started.</p>
                   ) : (
-                      <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
-                         {participants.map((p) => (
-                          <div key={p.id} className={`flex items-center justify-between p-3 sm:p-4 rounded-xl border transition-all ${
-                            p.status === 'active' ? 'bg-stone-950/30 border-stone-800 hover:border-stone-700' :
-                            p.status === 'removed' ? 'bg-amber-950/10 border-amber-900/20 opacity-50' :
-                            'bg-red-950/10 border-red-900/20 opacity-50'
-                          }`}>
-                            <div className="space-y-1 overflow-hidden">
-                              <p className="font-medium text-stone-100 text-xs sm:text-sm leading-none truncate">{p.name}</p>
-                              <div className="flex items-center gap-2">
-                                <p className="text-[8px] sm:text-[9px] text-stone-500 font-mono tracking-wider uppercase">
-                                  {new Date(p.created_at).toLocaleDateString()}
-                                </p>
-                                {p.status !== 'active' && (
-                                  <span className={`text-[8px] px-1 py-0.5 rounded font-mono uppercase font-bold border ${p.status === 'removed' ? 'text-amber-600 border-amber-900/40 bg-amber-900/10' : 'text-red-500 border-red-900/40 bg-red-900/10'}`}>
-                                    {p.status}
-                                  </span>
-                                )}
-                              </div>
+                    <ul className="custom-scrollbar max-h-[340px] space-y-1 overflow-y-auto">
+                      {participants.map((p) => (
+                        <li
+                          key={p.id}
+                          className={cn(
+                            "flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 transition-colors",
+                            p.status === 'active' ? 'hover:bg-white/[0.03]' : 'opacity-50'
+                          )}
+                        >
+                          <div className="flex min-w-0 items-center gap-3">
+                            <span className="grid size-8 shrink-0 place-items-center rounded-[10px] bg-ink-800 font-display text-sm font-semibold text-ink-200">
+                              {p.name?.charAt(0)?.toUpperCase()}
+                            </span>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-medium text-ink-100">{p.name}</p>
+                              <p className="text-xs text-ink-400">
+                                Joined {new Date(p.created_at).toLocaleDateString()}
+                                {p.status !== 'active' && <span className="ml-2 capitalize text-[#ff9ea1]">{p.status}</span>}
+                              </p>
                             </div>
-                            {p.status === 'active' && (
-                              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                                <Button variant="ghost" size="sm" className="h-7 sm:h-8 px-2 sm:px-3 text-amber-600/70 hover:text-amber-500 hover:bg-amber-500/10 text-[9px] sm:text-[10px] font-mono uppercase" onClick={() => handleRemove(p.id)}>
-                                  Remove
-                                </Button>
-                                <Button variant="ghost" size="sm" className="h-7 sm:h-8 px-2 sm:px-3 text-red-600/70 hover:text-red-500 hover:bg-red-500/10 text-[9px] sm:text-[10px] font-mono uppercase" onClick={() => handleKick(p.id)}>
-                                  Kick
-                                </Button>
-                              </div>
-                            )}
                           </div>
-                        ))}
-                      </div>
+                          {p.status === 'active' && (
+                            <div className="flex shrink-0 items-center gap-1">
+                              <Button variant="ghost" size="xs" onClick={() => handleRemove(p.id)}>Remove</Button>
+                              <Button variant="ghost" size="xs" className="text-[#ff9ea1] hover:bg-safelight/10 hover:text-[#ffb3b5]" onClick={() => handleKick(p.id)}>Kick</Button>
+                            </div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
                   )}
-                </CardContent>
+                </div>
               )}
-            </Card>
+            </section>
 
-            {/* Admin Preview */}
-            <Card className="bg-stone-900/40 border-stone-800/50 backdrop-blur-xl">
-                <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-stone-800/50 pb-4 gap-4 sm:gap-0">
-                <CardTitle className="text-xl font-serif italic text-stone-100 tracking-tight">Media Preview</CardTitle>
-                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <section className="surface">
+              <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="font-display text-xl font-semibold tracking-[-0.02em] text-ink-100">Media</h2>
+                  <p className="mt-0.5 text-sm text-ink-400">Only you can see these before the reveal.</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
                   <input
                     type="file"
                     id="host-upload"
@@ -544,28 +508,16 @@ export default function EventDetailPage() {
                     className="hidden"
                     onChange={handleHostUpload}
                   />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex-1 sm:flex-none rounded-full text-[10px] uppercase tracking-[0.2em] font-mono text-stone-500 hover:text-amber-500 border border-stone-800 sm:border-transparent"
-                    onClick={() => document.getElementById('host-upload')?.click()}
-                  >
-                    <Plus className="w-3.5 h-3.5 mr-2" />
-                    <span className="xs:inline">Upload</span>
+                  <Button variant="secondary" size="sm" onClick={() => document.getElementById('host-upload')?.click()}>
+                    <UploadSimpleIcon /> Upload
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={handleOpenCamera}>
+                    <CameraIcon /> Camera
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="flex-1 sm:flex-none rounded-full text-[10px] uppercase tracking-[0.2em] font-mono text-stone-500 hover:text-amber-500 border border-stone-800 sm:border-transparent"
-                    onClick={handleOpenCamera}
-                  >
-                    <Camera className="w-3.5 h-3.5 mr-2" />
-                    <span className="xs:inline">Camera</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex-1 sm:flex-none rounded-full text-[10px] uppercase tracking-[0.2em] font-mono text-stone-500 hover:text-amber-500 border border-stone-800 sm:border-transparent"
+                    aria-expanded={showPreview}
                     onClick={async () => {
                       if (!showPreview && photos.length === 0) {
                         const { data } = await supabase
@@ -573,112 +525,102 @@ export default function EventDetailPage() {
                           .select('id, telegram_file_id, created_at, media_type, mime_type, participants(name)')
                           .eq('event_id', id)
                           .order('created_at', { ascending: false })
-                        
+
                         const formattedPhotos = data?.map(p => ({
                           ...p,
                           photographer_name: (p.participants as any)?.name
                         })) || []
-                        
+
                         setPhotos(formattedPhotos)
                       }
                       setShowPreview(!showPreview)
                     }}
                   >
-                    <Eye className="w-3.5 h-3.5 mr-2" />
-                    <span className="xs:inline">{showPreview ? 'Close' : `View (${photosCount})`}</span>
+                    {showPreview ? <EyeSlashIcon /> : <EyeIcon />}
+                    {showPreview ? 'Hide' : `Preview (${photosCount})`}
                   </Button>
                 </div>
-              </CardHeader>
-               {isUploading && (
-                <div className="p-6 border-b border-stone-800/50 bg-amber-500/5 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <div className="flex justify-between items-center mb-4">
-                    <p className="text-[10px] uppercase font-mono tracking-[0.2em] text-amber-500 animate-pulse">
-                      Vault Upload in progress...
-                    </p>
-                    <span className="text-amber-500 font-mono text-[10px]">
-                      {Object.values(uploadProgress).reduce((a, b) => a + b, 0) / Math.max(1, Object.keys(uploadProgress).length)}%
-                    </span>
+              </div>
+
+              {isUploading && (
+                <div className="border-t border-white/[0.06] p-6" role="status" aria-live="polite">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-ink-200">Uploading to the vault</span>
+                    <span className="tabular font-mono text-flare-400">{uploadPct}%</span>
                   </div>
-                  <div className="w-full bg-stone-950 h-2 rounded-full overflow-hidden border border-stone-900 shadow-inner">
-                    <div 
-                      className="bg-gradient-to-r from-amber-600 to-amber-400 h-full transition-all duration-300 shadow-[0_0_15px_rgba(245,158,11,0.4)]"
-                      style={{ width: `${Object.values(uploadProgress).reduce((a, b) => a + b, 0) / Math.max(1, Object.keys(uploadProgress).length)}%` }}
-                    />
+                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-ink-950">
+                    <div className="h-full rounded-full bg-flare-500 transition-[width] duration-300" style={{ width: `${uploadPct}%` }} />
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="mt-3 flex flex-wrap gap-1.5">
                     {Object.entries(uploadProgress).map(([name, progress]) => (
-                      <div key={name} className="flex items-center gap-1.5 bg-stone-900/50 px-2 py-1 rounded-md border border-stone-800">
-                        <span className="text-[8px] font-mono text-stone-500 truncate max-w-[80px]">{name}</span>
-                        <span className="text-[8px] font-mono text-amber-500">{progress}%</span>
-                      </div>
+                      <span key={name} className="inline-flex items-center gap-1.5 rounded-lg bg-ink-800 px-2 py-1 text-xs text-ink-300">
+                        <span className="max-w-[120px] truncate">{name}</span>
+                        <span className="tabular font-mono text-flare-400">{progress}%</span>
+                      </span>
                     ))}
                   </div>
                 </div>
               )}
+
               {showPreview && (
-                <CardContent className="pt-6">
+                <div className="border-t border-white/[0.06] p-4">
                   {photos.length === 0 ? (
-                    <p className="text-stone-600 text-xs italic py-8 text-center font-mono uppercase tracking-widest">No media captured yet</p>
+                    <p className="py-10 text-center text-sm text-ink-400">Nothing on the roll yet.</p>
                   ) : (
-                    <div className="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                      <GalleryGrid 
-                        photos={photos} 
-                        isRevealing={false} 
+                    <div className="custom-scrollbar max-h-[560px] overflow-y-auto pr-1">
+                      <GalleryGrid
+                        photos={photos}
+                        isRevealing={false}
                         showDelete={true}
                         onDelete={handleDeleteMedia}
                       />
                     </div>
                   )}
-                </CardContent>
+                </div>
               )}
-            </Card>
+            </section>
 
+            <div className="flex justify-end pt-2">
+              <Button variant="ghost" size="sm" className="text-[#ff9ea1] hover:bg-safelight/10 hover:text-[#ffb3b5]" onClick={handleDelete}>
+                <TrashIcon /> Delete this vault
+              </Button>
+            </div>
           </div>
 
-          {/* Right: Join QR & Links */}
-          <div className="space-y-6">
-            <Card className="bg-stone-900 border border-stone-800 overflow-hidden shadow-2xl relative">
-              <div className="absolute top-0 left-0 w-full h-1 bg-amber-500" />
-              <CardHeader className="text-center py-6 border-b border-stone-800/50">
-                <CardTitle className="text-2xl font-serif italic text-stone-100">Guest Access</CardTitle>
-                <CardDescription className="text-stone-500 text-xs">Share this QR with your participants</CardDescription>
-              </CardHeader>
-              <CardContent className="p-8 flex flex-col items-center space-y-8">
-                <div className="p-4 sm:p-5 bg-white rounded-2xl shadow-[0_0_50px_rgba(255,255,255,0.05)] border border-white/10 group transition-all hover:scale-105 active:scale-95 cursor-pointer max-w-full">
-                  <QRCodeSVG value={joinUrl} size={160} level="H" className="w-full h-auto max-w-[180px]" />
-                </div>
-
-                <div className="w-full space-y-4">
-                  <div className="bg-stone-950/50 border border-stone-800 rounded-2xl p-3 sm:p-4 text-center">
-                    <p className="text-[8px] sm:text-[9px] uppercase tracking-[0.3em] text-stone-600 font-mono mb-1.5 sm:mb-2 text-center">Access Token</p>
-                    <p className="text-2xl sm:text-3xl font-mono font-bold tracking-[0.2em] text-stone-100 select-all">{event.code}</p>
+          {/* Guest access, styled as a physical ticket with the join code */}
+          <aside className="lg:sticky lg:top-24 lg:self-start">
+            <div className="[perspective:1200px]">
+              <div className="surface overflow-hidden transition-transform duration-500 ease-out-expo hover:[transform:rotateY(-6deg)_rotateX(4deg)]">
+                <div className="p-6 text-center">
+                  <h2 className="font-display text-xl font-semibold tracking-[-0.02em] text-ink-100">Guest access</h2>
+                  <p className="mt-1 text-sm text-ink-400">Print it, project it, or send the link.</p>
+                  <div className="mx-auto mt-6 w-fit rounded-2xl bg-ink-100 p-4 shadow-[0_24px_48px_-20px_rgb(0_0_0/0.9)]">
+                    <QRCodeSVG value={joinUrl} size={168} level="H" bgColor="#ededf0" fgColor="#0b0b0c" className="h-auto w-full max-w-[168px]" />
                   </div>
-
-                  <Button
-                    onClick={copyJoinLink}
-                    className={`w-full h-11 sm:h-12 rounded-2xl transition-all font-bold text-xs sm:text-sm ${copied ? 'bg-green-600 text-white' : 'bg-amber-500 text-stone-950 hover:bg-amber-400'}`}
-                  >
-                    {copied ? (
-                      <span className="flex items-center gap-2"><CheckCircle2 className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Copied</span>
-                    ) : (
-                      <span className="flex items-center gap-2"><Copy className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Copy Access Link</span>
-                    )}
-                  </Button>
-
-                  <Link href={`/${event.code}`} target="_blank" className="w-full">
-                    <Button variant="outline" className="w-full h-11 sm:h-12 rounded-2xl border-stone-800 text-stone-400 hover:bg-stone-800 hover:text-stone-100 transition-all font-medium text-xs sm:text-sm">
-                      <ExternalLink className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-1.5 sm:mr-2" /> Open Guest View
-                    </Button>
-                  </Link>
                 </div>
-              </CardContent>
-              <div className="bg-stone-950/50 p-4 text-center border-t border-stone-800/50">
-                <p className="text-[8px] font-mono text-stone-700 uppercase tracking-widest">SnapVault Premium</p>
+                <div aria-hidden className="relative h-px border-t border-dashed border-white/15">
+                  <span className="absolute -top-3 -left-3 size-6 rounded-full bg-ink-950" />
+                  <span className="absolute -top-3 -right-3 size-6 rounded-full bg-ink-950" />
+                </div>
+                <div className="space-y-3 p-6">
+                  <div className="text-center">
+                    <p className="text-xs text-ink-400">Event code</p>
+                    <p className="tabular mt-1 font-mono text-3xl font-semibold tracking-[0.2em] text-ink-100 select-all">{event.code}</p>
+                  </div>
+                  <Button onClick={copyJoinLink} size="lg" variant={copied ? "secondary" : "default"} className="w-full" aria-live="polite">
+                    {copied ? <><CheckIcon weight="bold" className="text-developed" /> Link copied</> : <><CopyIcon /> Copy join link</>}
+                  </Button>
+                  <Button asChild variant="outline" size="lg" className="w-full">
+                    <Link href={`/${event.code}`} target="_blank">
+                      Open guest view <ArrowUpRightIcon />
+                    </Link>
+                  </Button>
+                </div>
               </div>
-            </Card>
-          </div>
+            </div>
+          </aside>
         </div>
-      </div>
+      </main>
     </div>
   )
 }

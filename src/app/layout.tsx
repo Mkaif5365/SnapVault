@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Schibsted_Grotesk } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,23 +12,31 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const display = Schibsted_Grotesk({
+  variable: "--font-display-face",
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
+});
+
 export const metadata: Metadata = {
-  title: "SnapVault — Disposable Camera for Events",
-  description: "A time-locked photo experience for your events. Capture now, reveal later — like developing film.",
+  title: "SnapVault | The disposable camera for your event",
+  description:
+    "Guests scan a code and shoot a limited roll from their phone. Nobody sees a photo until your reveal time.",
   manifest: "/manifest.json",
-  icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
-  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "SnapVault",
   },
+  openGraph: {
+    title: "SnapVault",
+    description: "Everyone shoots. Nobody peeks. The whole roll develops at once.",
+    images: ["/shots/wedding-van.jpg"],
+  },
 };
 
 export const viewport = {
-  themeColor: "#0c0a09",
+  themeColor: "#0b0b0c",
 };
 
 export default function RootLayout({
@@ -37,10 +45,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${display.variable}`}>
+      <body className="grain antialiased">
         {children}
       </body>
     </html>

@@ -12,6 +12,15 @@ export const FILTERS = [
   { id: 'classic98', name: "'98 Date Stamp" },
 ]
 
+/** Live-preview CSS for each look (the canvas pipeline below bakes the same looks into the file). */
+export const FILTER_CSS: Record<FilterType, string> = {
+  none: 'none',
+  bw: 'grayscale(100%) contrast(1.2) brightness(0.9)',
+  sepia: 'sepia(0.8) contrast(1.1) brightness(0.95)',
+  polaroid: 'contrast(0.9) brightness(1.1) saturate(0.8)',
+  classic98: 'contrast(1.05) saturate(1.1) brightness(0.95)',
+}
+
 export function applyFilterToCanvas(
   canvas: HTMLCanvasElement,
   filterType: FilterType
