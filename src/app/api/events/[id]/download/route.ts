@@ -4,6 +4,9 @@ import JSZip from "jszip"
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 
+// Fetching every file from Telegram can take a while for big events (Hobby plan max).
+export const maxDuration = 300
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -86,12 +89,23 @@ export async function GET(
       }
     }
 
-    const zipBuffer = await zip.generateAsync({ type: "arraybuffer" })
+    // Stream the archive out as it is built. A buffered response over 4.5 MB
+    // would be rejected by Vercel; streamed responses are not capped.
+    const zipStream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        zip
+          .generateInternalStream({ type: "uint8array", streamFiles: true })
+          .on("data", (chunk: Uint8Array) => controller.enqueue(chunk))
+          .on("error", (err: Error) => controller.error(err))
+          .on("end", () => controller.close())
+          .resume()
+      },
+    })
 
     // Sanitize event name for filename
     const safeName = event.name.replace(/[^a-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '_')
 
-    return new NextResponse(zipBuffer, {
+    return new NextResponse(zipStream, {
       status: 200,
       headers: {
         "Content-Type": "application/zip",

@@ -9,7 +9,6 @@ export const getURL = () => {
   // 2. Server-side environment variables
   let url =
     process?.env?.NEXT_PUBLIC_SITE_URL ?? 
-    process?.env?.URL ?? // Netlify's primary URL
     process?.env?.NEXT_PUBLIC_VERCEL_URL ?? 
     'http://localhost:3000/'
   

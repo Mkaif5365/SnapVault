@@ -10,6 +10,8 @@ import { Logo, LogoMark } from "@/components/brand/Logo"
 import { StatusBadge } from "@/components/app/StatusBadge"
 import DevelopingScreen from "@/components/event/DevelopingScreen"
 import GalleryGrid from "@/components/event/GalleryGrid"
+import { uploadMedia } from "@/lib/media/upload-media"
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/media/limits"
 
 type PageState = 'loading' | 'join' | 'hub' | 'developing' | 'revealed' | 'locked'
 
@@ -148,53 +150,31 @@ export default function GuestEventPage() {
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
       
-      // 2. Size limit: 50MB
-      if (file.size > 50 * 1024 * 1024) {
-        alert(`File "${file.name}" is too large (max 50MB). Skipping.`)
+      // 2. Size limit (Telegram bots can only read back files up to 20MB)
+      if (file.size > MAX_UPLOAD_BYTES) {
+        alert(`File "${file.name}" is too large (max ${MAX_UPLOAD_LABEL}). Skipping.`)
         continue
       }
 
       setUploadProgress(prev => ({ ...prev, current: i + 1 }))
       setPerFileProgress(0)
 
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("eventId", event.id)
-      formData.append("participantId", participant?.id || "")
       const isVideo = file.type.startsWith('video/')
-      formData.append("mediaType", isVideo ? "video" : "photo")
-      formData.append("mimeType", file.type)
-      formData.append("photographerName", participant?.name || "Guest")
 
       try {
-        await new Promise((resolve, reject) => {
-          const xhr = new XMLHttpRequest()
-          xhr.open("POST", "/api/upload")
-
-          xhr.upload.onprogress = (event) => {
-            if (event.lengthComputable) {
-              const percent = Math.round((event.loaded / event.total) * 100)
-              setPerFileProgress(percent)
-            }
-          }
-
-          xhr.onload = () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              const response = JSON.parse(xhr.responseText)
-              if (response.success) {
-                setPhotosCount(prev => prev + 1)
-                resolve(response)
-              } else {
-                reject(new Error(response.error || "Upload failed"))
-              }
-            } else {
-              reject(new Error(`Upload failed with status ${xhr.status}`))
-            }
-          }
-
-          xhr.onerror = () => reject(new Error("Network error during upload"))
-          xhr.send(formData)
-        })
+        await uploadMedia(
+          file,
+          file.name,
+          {
+            eventId: event.id,
+            participantId: participant?.id || "",
+            mediaType: isVideo ? "video" : "photo",
+            mimeType: file.type,
+            photographerName: participant?.name || "Guest",
+          },
+          setPerFileProgress
+        )
+        setPhotosCount(prev => prev + 1)
       } catch (err: any) {
         console.error(`Failed to upload ${file.name}:`, err.message)
       }
@@ -260,7 +240,7 @@ export default function GuestEventPage() {
                 {uploading ? <SpinnerGapIcon className="size-5 animate-spin text-flare-400" /> : <UploadSimpleIcon className="size-5 text-ink-300" />}
                 <span className="font-medium">{uploading ? 'Uploading...' : 'Upload from your phone'}</span>
               </span>
-              <span className="text-xs text-ink-400">Max 50MB each</span>
+              <span className="text-xs text-ink-400">Max {MAX_UPLOAD_LABEL} each</span>
             </div>
           </div>
 

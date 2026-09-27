@@ -65,6 +65,16 @@ The project includes SQL migrations to set up the following:
 - `participants`: Anonymous guest records.
 - `photos`: Linked metadata for Telegram-stored assets.
 - `promocodes`: System for expanding event photo limits.
+- `storage.buckets / uploads`: Private relay bucket for uploads over 4 MB (see below).
+
+## ▲ Deploying to Vercel
+
+1. Import the GitHub repo at [vercel.com/new](https://vercel.com/new) (framework preset: Next.js).
+2. Add all five variables from **Environment Setup** to Production and Preview. `SUPABASE_SERVICE_ROLE_KEY` is server-only; never prefix it with `NEXT_PUBLIC_`.
+3. Run `supabase/migrations/20260927000000_uploads_bucket.sql` in the Supabase SQL editor.
+4. In Supabase → Authentication → URL Configuration, set the Site URL to your Vercel domain and add `https://<your-domain>/**` (plus `https://*-<your-team>.vercel.app/**` for preview deploys) to Redirect URLs.
+
+**Upload size:** Vercel Functions cap request and buffered response bodies at 4.5 MB. Files up to 4 MB go straight to `/api/upload`; larger files (up to 20 MB) are uploaded by the browser to the `uploads` bucket with a signed URL, then `/api/upload/complete` forwards them to Telegram and deletes the temporary copy. Photo/video viewing and the ZIP export stream their responses. The 20 MB cap matches the largest file a Telegram bot can download.
 
 ---
 

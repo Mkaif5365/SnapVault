@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
 import { applyFilterToCanvas, FilterType, FILTERS, FILTER_CSS } from "@/components/camera/CameraFilters"
 import { uploadMediaToTelegram } from "@/lib/telegram/actions"
+import { uploadMedia } from "@/lib/media/upload-media"
 
 export default function CameraPage() {
   const { eventCode } = useParams()
@@ -107,7 +108,7 @@ export default function CameraPage() {
     
     recordedChunksRef.current = []
     const mimeType = MediaRecorder.isTypeSupported('video/mp4') ? 'video/mp4' : 'video/webm'
-    const recorder = new MediaRecorder(stream, { mimeType })
+    const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 2_500_000 })
     
     recorder.ondataavailable = (e) => {
       if (e.data.size > 0) {
@@ -162,48 +163,28 @@ export default function CameraPage() {
     setIsCapturing(true)
     setPerFileProgress(0)
     
-    const formData = new FormData()
-    formData.append("file", previewBlob, "video.mp4")
-    formData.append("eventId", event.id)
     const participantId = localStorage.getItem(`participant_${event.id}`)
-    if (participantId) formData.append("participantId", participantId)
-    if (isHost && !participantId) formData.append("photographerName", "Host")
-    formData.append("mediaType", "video")
-    formData.append("mimeType", previewBlob.type)
-    formData.append("duration", recordingTime.toString())
 
     try {
-      await new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest()
-        xhr.open("POST", "/api/upload")
-
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            setPerFileProgress(Math.round((event.loaded / event.total) * 100))
-          }
-        }
-
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            const response = JSON.parse(xhr.responseText)
-            if (response.success) {
-              setPhotosCount(prev => prev + 1)
-              dismissPreview()
-              resolve(response)
-            } else {
-              reject(new Error(response.error || "Upload failed"))
-            }
-          } else {
-            reject(new Error(`Upload failed with status ${xhr.status}`))
-          }
-        }
-        xhr.onerror = () => reject(new Error("Network error"))
-        xhr.send(formData)
-      })
+      await uploadMedia(
+        previewBlob,
+        "video.mp4",
+        {
+          eventId: event.id,
+          participantId: participantId || undefined,
+          photographerName: isHost && !participantId ? "Host" : undefined,
+          mediaType: "video",
+          mimeType: previewBlob.type,
+          duration: recordingTime.toString(),
+        },
+        setPerFileProgress
+      )
+      setPhotosCount(prev => prev + 1)
+      dismissPreview()
     } catch (err: any) {
       alert(err.message || "Video upload failed")
     }
-    
+
     setIsCapturing(false)
     setPerFileProgress(0)
   }
@@ -241,39 +222,17 @@ export default function CameraPage() {
       // Convert to blob
       canvas.toBlob(async (blob) => {
         if (blob) {
-          const formData = new FormData()
-          formData.append("file", blob, "capture.jpg")
-          formData.append("eventId", event.id)
-          
           const participantId = localStorage.getItem(`participant_${event.id}`)
-          if (participantId) {
-            formData.append("participantId", participantId)
-          } else if (isHost) {
-            formData.append("photographerName", "Host")
-          }
-          formData.append("mediaType", "photo")
-          formData.append("mimeType", "image/jpeg")
 
           try {
-            await new Promise((resolve, reject) => {
-              const xhr = new XMLHttpRequest()
-              xhr.open("POST", "/api/upload")
-              xhr.onload = () => {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                  const response = JSON.parse(xhr.responseText)
-                  if (response.success) {
-                    setPhotosCount(prev => prev + 1)
-                    resolve(response)
-                  } else {
-                    reject(new Error(response.error || "Upload failed"))
-                  }
-                } else {
-                  reject(new Error(`Upload failed: ${xhr.status}`))
-                }
-              }
-              xhr.onerror = () => reject(new Error("Network error"))
-              xhr.send(formData)
+            await uploadMedia(blob, "capture.jpg", {
+              eventId: event.id,
+              participantId: participantId || undefined,
+              photographerName: !participantId && isHost ? "Host" : undefined,
+              mediaType: "photo",
+              mimeType: "image/jpeg",
             })
+            setPhotosCount(prev => prev + 1)
           } catch (err: any) {
             alert(err.message || "Upload failed")
           }

@@ -56,11 +56,10 @@ export async function GET(
     const photoUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${fileInfo.result.file_path}`
     const photoRes = await fetch(photoUrl)
 
-    if (!photoRes.ok) {
+    if (!photoRes.ok || !photoRes.body) {
       return NextResponse.json({ error: "Failed to load photo" }, { status: 500 })
     }
 
-    const photoBuffer = await photoRes.arrayBuffer()
     const contentType = photo.mime_type || photoRes.headers.get("content-type") || "image/jpeg"
     const download = request.nextUrl.searchParams.get("download")
 
@@ -82,7 +81,8 @@ export async function GET(
       headers["Content-Disposition"] = `attachment; filename="snapvault-${fileId}.${finalExt}"`
     }
 
-    return new NextResponse(photoBuffer, {
+    // Stream straight through: Vercel's 4.5 MB response cap does not apply to streamed bodies.
+    return new NextResponse(photoRes.body, {
       status: 200,
       headers
     })

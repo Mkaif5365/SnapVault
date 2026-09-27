@@ -13,6 +13,8 @@ import { useParams, useRouter } from "next/navigation"
 import GalleryGrid from "@/components/event/GalleryGrid"
 import { removeParticipant, kickParticipant, updateRevealTime, toggleEventLock, applyPromocode, deleteMedia } from "@/lib/actions/host"
 import { uploadMediaToTelegram } from "@/lib/telegram/actions"
+import { uploadMedia } from "@/lib/media/upload-media"
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/media/limits"
 
 export default function EventDetailPage() {
   const { id } = useParams()
@@ -193,42 +195,24 @@ export default function EventDetailPage() {
     setUploadProgress({})
     let uploadedCount = 0
 
-    const uploadFile = (file: File) => {
-      return new Promise<boolean>((resolve) => {
-        const xhr = new XMLHttpRequest()
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('eventId', id as string)
-        formData.append('photographerName', 'Host')
-        
-        const mediaType = file.type.startsWith('video/') ? 'video' : 'photo'
-        formData.append('mediaType', mediaType)
-        formData.append('mimeType', file.type)
-
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const percentComplete = Math.round((event.loaded / event.total) * 100)
-            setUploadProgress(prev => ({ ...prev, [file.name]: percentComplete }))
-          }
-        }
-
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve(true)
-          } else {
-            console.error('Upload failed', xhr.responseText)
-            resolve(false)
-          }
-        }
-
-        xhr.onerror = () => {
-          console.error('XHR error')
-          resolve(false)
-        }
-
-        xhr.open('POST', '/api/upload')
-        xhr.send(formData)
-      })
+    const uploadFile = async (file: File) => {
+      if (file.size > MAX_UPLOAD_BYTES) {
+        alert(`File "${file.name}" is too large (max ${MAX_UPLOAD_LABEL}). Skipping.`)
+        return false
+      }
+      const mediaType = file.type.startsWith('video/') ? 'video' : 'photo'
+      try {
+        await uploadMedia(
+          file,
+          file.name,
+          { eventId: id as string, photographerName: 'Host', mediaType, mimeType: file.type },
+          (percentComplete) => setUploadProgress(prev => ({ ...prev, [file.name]: percentComplete }))
+        )
+        return true
+      } catch (err) {
+        console.error('Upload failed', err)
+        return false
+      }
     }
 
     for (const file of Array.from(files)) {
